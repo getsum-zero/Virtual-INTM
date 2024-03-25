@@ -1,0 +1,100 @@
+
+real_world_data:
+
+  # mode
+  mode: "fitting"       # fitting or simulation
+
+  # The stimulus format is 8x8 MEA, 1Hz, 500mV; 10 stimuli per group
+  stimulus: [
+            0,0,0,0,0,0,0,0,
+            0,0,0,0,0,0,0,0,
+            0,0,0,0,0,0,0,0,
+            0,0,0,1,1,0,0,0,
+            0,0,0,1,1,0,0,0,
+            0,0,0,0,0,0,0,0,
+            0,0,0,0,0,0,0,0,
+            0,0,0,0,0,0,0,0,
+        ]
+  # Real biological data, in .mat format; 
+  # The naming of each electrode data needs to be strictly defined
+  response: "./data/brain_spike/2.1.mat" 
+  loadpath: "./test/"
+
+  draw_ori: True                  # Whether to draw MEA spike realse diagram
+  draw_p: True                    # Whether to draw a heat map of MEA firing rate
+  savepath: "./logs/outcomes/"    # Where to save outcomes
+
+
+
+
+# Determine the position of the neuron in the plane
+# Determine the connections between neurons
+# Determine the relationship between electrodes and neurons
+planar_topology:
+  N: 2000               # the number of neurons
+  unit: 1               # the distance between electrodes
+  ele_scale: 0.35       # electrode size (radius)
+  cell_unit: 0.01      # cell size (radius)
+  cell_scale: [1, 3, 5, 7]
+  cell_prob: [0.85, 0.1, 0.04, 0.01]
+
+
+  # short synaptic connections
+  connect_len: 0.3      # Limit distance of near point connection
+  near_p: 0.0008         # Probability of near point connection
+  lateral_inh: False    # lateral inhibition
+  
+  # long synaptic connections
+  far_n: 2              # Number of long connections per neuron
+
+  # distributed synaptic connections
+  fire_n: 30000        # Number of distributed connections 
+
+  # draw
+  draw_point: True      # Visual plane
+  draw_connet: False    # Visual connet
+  draw_3D_face: False   # Whether to draw a heat map of firing rate
+  savepath: "./logs/outcomes/"   # Where to save outcomes
+
+
+# Synaptic connections and plasticity
+synapses:
+  neuron_type: "Izhikevich"         # neuron model
+  synapses_type: "BioNMDA"
+  multiple: [0, 3]                  # repeat synapse
+  w_bound: 10                       # synaptic weight upper bound
+  plasticity_type: "STDP"           # plasticity
+  homeo_type: "norm"                # homeostatic plasticity  "norm" or "exp"
+  dy_delete: True                   # Dynamically delete synapses
+  
+  # Para for STDP
+  stdp:
+    tau_s: 40
+    tau_t: 40
+    A1: 1
+    A2: 1
+    theta_p: 0.001
+    theta_n: 0.001
+    method: 'exp_auto'
+
+  # Para for STD
+  stp:
+    U: 0.2
+    tau_d: 2
+    tau_f: 2
+  
+
+# Environment settings
+Setting:
+  platform: "gpu"                   # "cpu"  or  "gpu"
+  cuda_devices: "0"                 # the id of GPU
+  dt: 0.01                           # time step
+           
+
+Running:
+  savepath: "./logs/"        # where to save model
+  cons: 1000                         # 500 mV      core
+  during: 10                        # 10 s
+  epoch: 1
+  interval: 2            
+  
