@@ -11,7 +11,6 @@ import brainpy as bp
 import brainpy.math as bm
 import tkinter as tk
 import pickle
-import gif
 
 
 class SNN(bp.DynamicalSystem):

@@ -1,5 +1,5 @@
 Running:
-  cons: 4000
+  cons: 2000
   during: 10
   epoch: 1
   interval: 2
@@ -11,16 +11,16 @@ Setting:
 planar_topology:
   N: 2000
   cell_prob:
-  - 0.5
-  - 0.3
-  - 0.15
-  - 0.05
+  - 0.85
+  - 0.1
+  - 0.04
+  - 0.01
   cell_scale:
   - 1.0
   - 3.0
   - 5.0
   - 7.0
-  cell_unit: 0.005
+  cell_unit: 0.034754999999999994
   connect_len: 0.3
   draw_3D_face: false
   draw_connet: false
@@ -28,7 +28,7 @@ planar_topology:
   ele_scale: 0.35
   far_n: 2
   fire_n: 30000
-  lateral_inh: false
+  lateral_inh: 0
   near_p: 0.0008
   savepath: ./logs/outcomes/
   unit: 1
@@ -37,7 +37,7 @@ real_world_data:
   draw_p: false
   loadpath: ./logs/
   mode: fitting
-  response: /home/getsum/Binsp/data/brain_spike/2.1.mat
+  response: D:/code/pysim/data/brain_spike/2.1.mat
   savepath: ./logs/outcomes/
   stimulus:
   - 0
@@ -104,8 +104,11 @@ real_world_data:
   - 0
   - 0
   - 0
+shape:
+  col: 8
+  row: 8
 synapses:
-  dy_delete: true
+  dy_delete: 1
   homeo_type: norm
   multiple:
   - 0.0
@@ -124,5 +127,5 @@ synapses:
     U: 0.2
     tau_d: 2
     tau_f: 2
-  synapses_type: AMPA
-  w_bound: 1
+  synapses_type: BioNMDA
+  w_bound: 10

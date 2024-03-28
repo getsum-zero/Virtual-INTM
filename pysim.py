@@ -1,5 +1,4 @@
 import tkinter as tk
-from tkinter import ttk
 from tkinter import filedialog
 import numpy as np
 import tkinter.font as font
@@ -7,8 +6,15 @@ from utils.check import check_covert
 from utils.simulator import simulate
 import yaml
 import os
+import ttkbootstrap as ttk
+from ttkbootstrap.constants import *
 
-from utils.draw import SimUI
+from utils.pysimUI import SimUI
+
+'''
+
+    https://ttkbootstrap.readthedocs.io/en/latest/zh/styleguide/entry/
+'''
 
 args = {
     "shape":{
@@ -89,64 +95,99 @@ def bind(event, name, attr):
     val = event.widget
     args[name][attr] = val.get()
 
-def create_Simulator(old, args):
-    try:
-        args["shape"]["row"] = int(args["shape"]["row"])
-        args["shape"]["col"] = int(args["shape"]["col"])
-        print(args["shape"])
-        assert args["shape"]["row"] > 0 
-        assert args["shape"]["col"] > 0
-    except Exception as e:
-        tk.messagebox.showerror(title='Error', message="Please enter correct shape! \n an Integer greater than 0")
-        return
+
+class MEAinput():
+    def __init__(self, master):
+
+        self.master = master
+        self.row = ttk.StringVar(value="8")
+        self.col = ttk.StringVar(value="8")
+        hdr_txt = "Please enter the size of the electrode array (row, col > 0)" 
+        hdr = ttk.Label(master=master, text=hdr_txt, width=50)
+        hdr.grid(row=0, column=0, rowspan = 1, columnspan = 2,sticky=NSEW)
+
+        self.entry = ttk.Frame(master)
+        self.entry.grid(row=1, column=0, rowspan = 1, columnspan = 1, sticky=NSEW)
+
+        self.button = ttk.Frame(master)
+        self.button.grid(row=1, column=1, rowspan = 1, columnspan = 1, sticky=NSEW)
+
+        self.create_form_entry(self.entry, "              Row", self.row)
+        self.create_form_entry(self.entry, "              Col", self.col)
+        self.create_buttonbox(self.button)
+
+        
+    def create_form_entry(self, windows, label, variable):
+
+        def check(x):
+            if x.isdigit() and int(x) > 0:
+                return True
+            else:
+                return False
+        container = ttk.Frame(windows)
+        container.pack(fill=X, expand=YES, pady=5)
+
+        lbl = ttk.Label(master=container, text=label.title(), width=10)
+        lbl.pack(side=LEFT, padx=5, anchor='w')
+
+        check_s = container.register(check)
+        ent = ttk.Entry(master=container, textvariable=variable, width=8, validate="focus", validatecommand=(check_s, '%P'))
+        ent.pack(side=LEFT, padx=5, expand=YES, anchor='w')
     
-    old.destroy()
-    root = tk.Tk()
-    root.title('Simulator')
-    root.geometry('650x850')
+    def create_buttonbox(self, windows):
+        container = ttk.Frame(windows)
+        container.pack(fill=X, expand=YES, pady=(15, 10))
 
-    window = SimUI(root, args)
-    window.show()
-    root.deiconify()  # 显示窗口
-    root.mainloop()
-    args = window.args
-    print(args)
+        sub_btn = ttk.Button(
+            master=container,
+            text="Submit",
+            command=lambda: self.create_Simulator(args),
+            bootstyle=SUCCESS,
+            width=10,
+        )
+        sub_btn.pack(side=LEFT, padx=5)
+        sub_btn.focus_set()
 
 
-def input_shape():
-    root = tk.Tk()
-    root.title("Initialization")
-    root.geometry('380x80')
-    root.resizable(0,0)
-    tk.Label(root, text="Please enter the size of the electrode array ( row, col > 0 ): ", ).grid(
-        row=0, rowspan=1, column=0, columnspan=3)
+    def on_closing(self, window):
+        window.destroy()
+        self.master.destroy()
+        
     
-    row = tk.StringVar()
-    col = tk.StringVar()
-    row.set("8")
-    col.set("8")
+    def create_Simulator(self, args):
+        try:
+            args["shape"]["row"] = int(self.row.get())
+            args["shape"]["col"] = int(self.col.get())
+            assert args["shape"]["row"] > 0 
+            assert args["shape"]["col"] > 0
+        except Exception as e:
+            tk.messagebox.showerror(title='Error', message="Please enter correct shape! \n an Integer greater than 0")
+            return
+        
+        try:
+            self.master.withdraw()
+            simroot = ttk.Toplevel(title="Simulator", resizable=(False, False))
 
-    tk.Label(root, text="Row:").grid(row=1, rowspan=1, column=0, columnspan=1)
-    entry = tk.Entry(root, textvariable=row, justify="center", width=10) 
-    entry.bind("<KeyRelease>", lambda event: bind(event, name="shape", attr="row"))
-    entry.grid(row=1, rowspan=1, column=1, columnspan=1, sticky='w')
+            simwindow = SimUI(simroot, args)
+            simwindow.run()
+            args = simwindow.args
+            print(args)
 
-    
-    tk.Label(root, text="Col:").grid(row=2, rowspan=1, column=0, columnspan=1)
-    entry = tk.Entry(root, textvariable=col, justify="center", width=10) 
-    entry.bind("<KeyRelease>", lambda event: bind(event, name="shape", attr="col"))
-    entry.grid(row=2, rowspan=1, column=1, columnspan=1, sticky='w')
-
-    run_button = tk.Button(root, text='Submit', 
-                            width=10, height=1, command=lambda: create_Simulator(root, args))
-    run_button.grid(row=1, rowspan=2, column=2, columnspan=1)
-
-    root.mainloop()
+            simroot.protocol("WM_DELETE_WINDOW", lambda: self.on_closing(simroot))
+        except Exception as e:
+            self.master.deiconify()
+            tk.messagebox.showerror(title='Error', message=str(e))
+            # tk.messagebox.showerror(title='Error', message="Unknown Error")
+            return
 
 
 if __name__ == '__main__':
     # font=("Arial",12,"bold")
-    input_shape()
+
+    pysim = ttk.Window("Initialization", resizable=(False, False))
+    MEAinput(pysim)
+    pysim.mainloop()
+
 
 
 
