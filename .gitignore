@@ -6,3 +6,4 @@ temp
 data
 build
 *.spec
+*.exe
