@@ -13,12 +13,30 @@ import copy
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
+'''
+    https://ttkbootstrap.readthedocs.io/en/latest/zh/gallery/filebackup/#_3
+
+
+'''
+
+
 def list2str(l):
     if isinstance(l,str):  return l
     s = ""
     for i in l:
         s += str(i) + ", "
     return s[:-2]
+
+image_files = {
+            'play': 'icons8_play_24px_1.png',
+            'refresh': 'icons8_refresh_24px_1.png',
+            'save': 'icons8_opened_folder_24px_1.png',
+            "up": "icons8_double_up_24px.png",
+            "right": 'icons8_double_right_24px.png', 
+            'new': 'icons8_add_book_24px.png',
+            'setting': 'icons8_settings_24px.png'
+            # 'logo': 'backup.png'
+        }
 
 class SimUI():
     def __init__(self, master, args):
@@ -35,52 +53,76 @@ class SimUI():
         self.empty_args = copy.deepcopy(args)
         self.hspacing = 20
 
+        self.photoimages = []
+        imgpath = "./media/"
+        for key, val in image_files.items():
+            _path = imgpath + val
+            self.photoimages.append(ttk.PhotoImage(name=key, file=_path))
+
     
-        style = ttk.Style()
-        style.configure('TLabelframe', 
-                        font=('Helvetica', 12, 'bold')
-                        #bordercolor='blue'
-                        )
+        # button
+        self.ButtonFrame = ttk.Frame(self.master,  style='primary.TFrame')
+        self.ButtonFrame.grid(row=0, column=0, rowspan = 1, columnspan = 3, sticky=NSEW, pady=10, ipady=10)
 
         # Mode
         option_text = "Select a Mode"
         self.ModeFrame = ttk.Labelframe(self.master, text=option_text, padding=15,)
-        self.ModeFrame.grid(row=0, column=0, rowspan = 1, columnspan = 3, sticky=NSEW, pady=5, padx=5)
+        self.ModeFrame.grid(row=1, column=0, rowspan = 1, columnspan = 3, sticky=NSEW, pady=5, padx=5)
 
         # Stimu
         option_text = "Develop stimulus formats"
         self.StimuFrame = ttk.Labelframe(self.master, text=option_text, padding=15, width=10)
-        self.StimuFrame.grid(row=1, column=0, rowspan = 2, columnspan = 1, sticky=NSEW, pady=5, padx=5)
+        self.StimuFrame.grid(row=2, column=0, rowspan = 2, columnspan = 1, sticky=NSEW, pady=5, padx=5)
 
         # Core
         option_text = "Core components"
         self.CoreFrame = ttk.Labelframe(self.master, text=option_text, padding=15)
-        self.CoreFrame.grid(row=1, column=1, rowspan = 1, columnspan = 2, sticky=NSEW, pady=5, padx=5)
+        self.CoreFrame.grid(row=2, column=1, rowspan = 1, columnspan = 2, sticky=NSEW, pady=5, padx=5)
 
         # Run
         option_text = "Running settings"
         self.RunFrame = ttk.Labelframe(self.master, text=option_text, padding=15)
-        self.RunFrame.grid(row=2, column=1, rowspan = 1, columnspan = 2, sticky=NSEW, pady=5, padx=5)
+        self.RunFrame.grid(row=3, column=1, rowspan = 1, columnspan = 2, sticky=NSEW, pady=5, padx=5)
 
         # Topo
         option_text = "Topology"
         self.TopoFrame = ttk.Labelframe(self.master, text=option_text, padding=15)
-        self.TopoFrame.grid(row=3, column=0, rowspan = 1, columnspan = 2, sticky=NSEW, pady=5, padx=5)
+        self.TopoFrame.grid(row=4, column=0, rowspan = 1, columnspan = 2, sticky=NSEW, pady=5, padx=5)
         self.CirFrame = ttk.Frame(self.master)
-        self.CirFrame.grid(row=3, column=2, rowspan = 1, columnspan = 1, sticky=NSEW, pady=5)
+        self.CirFrame.grid(row=4, column=2, rowspan = 1, columnspan = 1, sticky=NSEW, pady=5)
+
 
         # defua
-        option_text = "Others"
-        self.DefuaFrame = ttk.Labelframe(self.master, text=option_text, padding=15)
-        self.DefuaFrame.grid(row=4, column=0, rowspan = 1, columnspan = 3, sticky=NSEW, pady=5, padx=5)
-
-        # button
-        self.ButtonFrame = ttk.Frame(self.master)
-        self.ButtonFrame.grid(row=5, column=0, rowspan = 1, columnspan = 3, sticky=NSEW, pady=5)
-
+        self.CollapsingFrame(row = 5)
+        
         self.init_var()
         self.args2var()
 
+    def CollapsingFrame(self, row):
+        def toggle_open_close(child):
+            if child.winfo_viewable():
+                child.grid_remove()
+                child.btn.configure(image='right')
+            else:
+                child.grid()
+                child.btn.configure(image='up')
+
+        self.DefuaFrameHeader = ttk.Frame(self.master, bootstyle=PRIMARY)
+        self.DefuaFrameHeader.grid(row=row, column=0, rowspan = 1, columnspan = 3, 
+                                   sticky=NSEW, padx=5,  pady=10, ipady=10)
+        header = ttk.Label( master=self.DefuaFrameHeader,text="Other parameters",  bootstyle=(PRIMARY, INVERSE))
+        header.pack(side=LEFT, fill=BOTH, padx=10)
+        self.DefuaFrame = ttk.Frame(self.master, padding=15)
+
+        def _func(c=self.DefuaFrame):  return toggle_open_close(c)
+        btn = ttk.Button( master=self.DefuaFrameHeader, image='up', bootstyle=PRIMARY, command=_func)
+        btn.pack(side=RIGHT)
+        self.DefuaFrame.btn = btn
+        self.DefuaFrame.grid(row=0, column=3, rowspan = row+1, columnspan = 1, sticky=NSEW)
+        self.DefuaFrame.grid_remove()
+        self.DefuaFrame.btn.configure(image='right')
+
+   
     def init_var(self):
         self.option = tk.IntVar(value=2)
         self.filetext = tk.StringVar(value="Choose the path of real-world data (end with \".mat\")")
@@ -106,11 +148,11 @@ class SimUI():
         r0 = self.scale_var.get() / 10000 * r
         self.center_x = self.hspacing * 5
         self.center_y = self.hspacing * 4 
-        self.canvas.create_oval(self.center_x-r, self.center_y-r, self.center_x+r, self.center_y+r, fill="#7FCBA4", tags="ele")
-        self.canvas.create_oval(self.center_x-r0, self.center_y-r0, self.center_x+r0, self.center_y+r0, fill="#4B65AF", tags="cell")
-        self.canvas.create_rectangle(self.hspacing, self.hspacing * 9, self.hspacing * 3 , self.hspacing * 9.9, fill="#7FCBA4")
+        self.canvas.create_oval(self.center_x-r, self.center_y-r, self.center_x+r, self.center_y+r, fill="#4582EC", tags="ele")
+        self.canvas.create_oval(self.center_x-r0, self.center_y-r0, self.center_x+r0, self.center_y+r0, fill="#53B57B", tags="cell")
+        self.canvas.create_rectangle(self.hspacing, self.hspacing * 9, self.hspacing * 3 , self.hspacing * 9.9, fill="#4582EC")
         self.canvas.create_text(self.hspacing * 6, self.hspacing * 9.45, text="electrodes", fill="black")
-        self.canvas.create_rectangle(self.hspacing, self.hspacing * 10.1, self.hspacing * 3 , self.hspacing * 11, fill="#4B65AF")
+        self.canvas.create_rectangle(self.hspacing, self.hspacing * 10.1, self.hspacing * 3 , self.hspacing * 11, fill="#53B57B")
         self.canvas.create_text(self.hspacing * 6, self.hspacing * 10.55, text="cell", fill="black")
 
         self.cell_scale = tk.StringVar(value= "1, 3, 5, 7")
@@ -142,22 +184,34 @@ class SimUI():
             self.option.set(2)
             self.filetext.set("Choose the path of real-world data (end with \".mat\")")
             self.configtext.set("Choose the path of saved configuration")
+            if hasattr(self, 'file_label') and hasattr(self, 'config_label'):
+                self.file_label.config(bootstyle="default")
+                self.config_label.config(bootstyle="default")
+
         elif self.args["real_world_data"]["mode"] == "fitting":
             self.option.set(0)
             self.filetext.set(self.args["real_world_data"]["response"])
             self.configtext.set("Choose the path of saved configuration")
+            if hasattr(self, 'file_label') and hasattr(self, 'config_label'):
+                self.file_label.config(bootstyle="success")
+                self.config_label.config(bootstyle="default")
         else: 
             self.option.set(1)
             self.configtext.set(self.args["real_world_data"]["loadpath"])
             self.filetext.set("Choose the path of real-world data (end with \".mat\")")
+            if hasattr(self, 'file_label') and hasattr(self, 'config_label'):
+                self.file_label.config(bootstyle="default")
+                self.config_label.config(bootstyle="success")
 
         for i in range(self.inshape):
             self.var_list[i].set(self.args["real_world_data"]["stimulus"][i])
-        if self.args["shape"]["row"] > 10 or self.args["shape"]["col"] > 10:
-            if self.args["real_world_data"]["stimulus"] == None or np.sum(self.args["real_world_data"]["stimulus"]) == 0:
-                self.simcanvas = ttk.Canvas(self.StimuFrame, width=self.hspacing * 14, height=self.hspacing * 14, bg="gray")
-                self.simcanvas.grid(row=1, rowspan=10, column=0, columnspan=10)
-                self.simcanvas.create_text(self.hspacing * 7, self.hspacing * 7, text="Please load stimulus file !", fill="black")
+        if hasattr(self, 'simcanvas'):
+            if self.args["shape"]["row"] > 10 or self.args["shape"]["col"] > 10:
+                if self.args["real_world_data"]["stimulus"] == None or np.sum(self.args["real_world_data"]["stimulus"]) == 0:
+                    # self.simcanvas.grid_forget()
+                    self.simcanvas = ttk.Canvas(self.StimuContainer, width=self.hspacing * 14, height=self.hspacing * 14, bg="gray")
+                    self.simcanvas.grid(row=1, rowspan=10, column=0, columnspan=10)
+                    self.simcanvas.create_text(self.hspacing * 7, self.hspacing * 7, text="Please load stimulus file !", fill="black")
             else:  self.load_sim(self.args["real_world_data"]["stimulus"])
         
         self.value_n.set('' if self.args["synapses"]["neuron_type"] is None else self.args["synapses"]["neuron_type"])
@@ -176,7 +230,7 @@ class SimUI():
         self.canvas.delete("cell")
         r = self.scale_var.get() * self.hspacing * 4 / 10000
         self.canvas.create_oval(self.center_x-r, self.center_y-r, 
-                                self.center_x+r, self.center_y+r, fill="#4B65AF", tags="cell")
+                                self.center_x+r, self.center_y+r, fill="#53B57B", tags="cell")
 
         self.cell_scale.set(list2str(self.args["planar_topology"]["cell_scale"]))
         self.cell_prob.set(list2str(self.args["planar_topology"]["cell_prob"]))
@@ -281,7 +335,7 @@ class SimUI():
         
         ax.axis('off')
         fig.tight_layout(pad=0)
-        self.simcanvas = FigureCanvasTkAgg(fig, master=self.StimuFrame)
+        self.simcanvas = FigureCanvasTkAgg(fig, master=self.StimuContainer)
         self.simcanvas.draw()
         self.simcanvas.get_tk_widget().grid(row=1, rowspan=1, column=0, columnspan=1)
 
@@ -295,7 +349,11 @@ class SimUI():
             if file_path:
                 self.args["real_world_data"]["response"] = file_path
                 self.filetext.set(file_path)
-            else:   self.option.set(2)
+                self.file_label.config(bootstyle="success")
+            else:   
+                self.option.set(2)
+                self.file_label.config(bootstyle="default")
+                self.config_label.config(bootstyle="default")
 
         def select_folder():
             file_path = filedialog.askdirectory(title ="Select a folder", 
@@ -303,6 +361,8 @@ class SimUI():
             try:
                 # todo: check the `.pkl`
                 if file_path:
+                    rf = open(file=os.path.join(file_path, "topology.pkl"), mode='r')
+                    rf.close()
                     rf = open(file=os.path.join(file_path, "args.yaml"), mode='r')
                     crf = rf.read()
                     rf.close()
@@ -311,10 +371,16 @@ class SimUI():
                     self.args["real_world_data"]["loadpath"] = file_path
                     self.configtext.set(file_path)
                     self.args2var()  # update simus (>10)
-                else:    self.option.set(2)
+                    self.config_label.config(bootstyle="success")
+                else: 
+                    self.file_label.config(bootstyle="default")   
+                    self.option.set(2)
+                    self.config_label.config(bootstyle="default")
             except Exception as e:
                 tk.messagebox.showerror(title='Error', message="Illeagl folder, please select the correct folder!")
                 self.option.set(2)
+                self.file_label.config(bootstyle="default")   
+                self.config_label.config(bootstyle="default")
                 return
         
 
@@ -364,18 +430,18 @@ class SimUI():
                 tk.messagebox.showerror(title='Error', message=str(e))
 
         run_button = ttk.Button(master=self.ButtonFrame, text="Run", command=run,
-                                bootstyle=PRIMARY, width=10)
-        run_button.pack(side=LEFT, expand=True, padx=5)
+                                bootstyle=PRIMARY, width=10, image='play',  compound=LEFT,)
+        run_button.pack(side=LEFT, padx=5, ipadx=5, ipady=5)
         run_button.focus_set()
 
-        clear_button = ttk.Button(master=self.ButtonFrame, text="Clear", command=clear,
-                                bootstyle=INFO, width=10)
-        clear_button.pack(side=LEFT, expand=True, padx=5)
+        clear_button = ttk.Button(master=self.ButtonFrame, text="Refresh", command=clear,
+                               width=10, image='refresh', compound=LEFT, )
+        clear_button.pack(side=LEFT,  padx=5, ipadx=5, ipady=5)
         clear_button.focus_set()
 
         clear_button = ttk.Button(master=self.ButtonFrame, text="Save", command=save,
-                                bootstyle=SUCCESS, width=10)
-        clear_button.pack(side=LEFT, expand=True, padx=5)
+                               width=10, image='save', compound=LEFT, )
+        clear_button.pack(side=LEFT, padx=5, ipadx=5, ipady=5)
         clear_button.focus_set()
 
     def StimuGenerator(self):
@@ -409,23 +475,48 @@ class SimUI():
                 if self.mea_type == 0:  self.args2var() 
                 else:  self.load_sim(sim_list)
 
+        def preSetting():
+            for i in range(self.inshape):
+                self.args["real_world_data"]["stimulus"][i] = 0
+                self.var_list[i].set(0)
 
-        load = tk.Button(self.StimuFrame, text='load', command=lambda: select_file(), width=8)
-        load.grid(row=0, rowspan=1, column=0, columnspan=self.args["shape"]["col"], sticky=W, pady=5)
+            xx = [self.simusRow // 2 - 1, self.simusRow // 2]
+            yy = [self.simusCol // 2 - 1, self.simusCol // 2]
+            for i in xx:
+                for j in yy:
+                    id = i * self.simusCol + j
+                    self.args["real_world_data"]["stimulus"][id] = 1
+                    self.var_list[id].set(1)
+
+
+        loadFrame = ttk.Frame(self.StimuFrame,  style='primary.TFrame')
+        loadFrame.pack(fill=X, expand=YES, pady=5)
+        load = ttk.Button(loadFrame, text='load', command=select_file,
+                         image='new',  compound=LEFT,  width=5, )
+        load.pack(side=LEFT, padx=5, ipadx=5, ipady=5)
+    
+        load = ttk.Button(loadFrame, text='Preset', command=preSetting,
+                         image='setting',  compound=LEFT,  width=5, )
+        load.pack(side=LEFT, padx=5, ipadx=5, ipady=5)
+
         
-        
+        self.StimuContainer = ttk.Frame(self.StimuFrame)
+        self.StimuContainer.pack(fill=X, expand=YES, pady=5)
+
         if self.args["shape"]["row"] > 10 or self.args["shape"]["col"] > 10:
             self.mea_type = 1
-            self.simcanvas = ttk.Canvas(self.StimuFrame, width=self.hspacing * 14, height=self.hspacing * 14, bg="gray")
+            self.simcanvas = ttk.Canvas(self.StimuContainer, width=self.hspacing * 14, height=self.hspacing * 14, bg="gray")
             self.simcanvas.grid(row=1, rowspan=10, column=0, columnspan=10)
             self.simcanvas.create_text(self.hspacing * 7, self.hspacing * 7, text="Please load stimulus file !", fill="black")
 
         else:
             self.mea_type = 0
             for i in range(self.inshape):
-                stimulus_button = ttk.Checkbutton(self.StimuFrame, variable=self.var_list[i], 
+                stimulus_button = ttk.Checkbutton(self.StimuContainer, variable=self.var_list[i], 
                                                     onvalue=1, offvalue=0, bootstyle="PRIMARY")
-                stimulus_button.grid(row=1 + i//self.simusCol, rowspan=1, column=0 + (i%self.simusCol), columnspan = 1, pady=5,padx=5)
+                stimulus_button.grid(row=i//self.simusCol, rowspan=1, column=(i%self.simusCol), columnspan = 1, pady=5,padx=5)
+
+
 
 
     def adjust_w(self, event):
@@ -459,7 +550,7 @@ class SimUI():
         lbl.pack(side=LEFT, padx=5, anchor='w')
 
         check_s = container.register(lambda P: self.check_entry(P, "digit"))
-        ent = ttk.Entry(master=container, textvariable=self.num_sy, validate="focus", validatecommand=(check_s, '%P'))
+        ent = ttk.Entry(master=container, textvariable=self.num_sy, validate="focus", validatecommand=(check_s, '%P'),  justify="center",)
         ent.pack(side=RIGHT, padx=5, expand=YES, anchor='e')
 
     def RunGenerator(self):
@@ -474,7 +565,7 @@ class SimUI():
         lbl = ttk.Label(master=container, text="Cuda id")
         lbl.pack(side=LEFT, padx=5, anchor='e', expand=True)
         check_s = container.register(lambda P: self.check_entry(P, "digit"))
-        ent = ttk.Entry(master=container, textvariable=self.cuda_id, validate="focus", validatecommand=(check_s, '%P'), width=8)
+        ent = ttk.Entry(master=container, textvariable=self.cuda_id, validate="focus", validatecommand=(check_s, '%P'), width=8,  justify="center",)
         ent.pack(side=LEFT, padx=5, expand=YES, anchor='e')
 
         container = ttk.Frame(self.RunFrame)
@@ -482,13 +573,13 @@ class SimUI():
         lbl = ttk.Label(master=container, text="Stimulus intensity")
         lbl.pack(side=LEFT, padx=5, anchor='e', expand=True)
         check_s = container.register(lambda P: self.check_entry(P, "float"))
-        ent = ttk.Entry(master=container, textvariable=self.cons, validate="focus", validatecommand=(check_s, '%P'), width=8)
+        ent = ttk.Entry(master=container, textvariable=self.cons, validate="focus", validatecommand=(check_s, '%P'), width=8, justify="center",)
         ent.pack(side=LEFT, padx=5, expand=YES, anchor='w')
 
         lbl = ttk.Label(master=container, text="Time (s)")
         lbl.pack(side=LEFT, padx=5, anchor='e', expand=True)
         check_s = container.register(lambda P: self.check_entry(P, "float"))
-        ent = ttk.Entry(master=container, textvariable=self.T, validate="focus", validatecommand=(check_s, '%P'), width=8)
+        ent = ttk.Entry(master=container, textvariable=self.T, validate="focus", validatecommand=(check_s, '%P'), width=8, justify="center",)
         ent.pack(side=LEFT, padx=5, expand=YES, anchor='e')
 
     def TopoGenerator(self):
@@ -499,7 +590,8 @@ class SimUI():
             lbl.pack(side=LEFT, padx=5, anchor='w', expand=True)
 
             check_s = container.register(lambda P: self.check_entry(P, type))
-            ent = ttk.Entry(master=container, textvariable=var, validate="focus", validatecommand=(check_s, '%P'), width=20)
+            ent = ttk.Entry(master=container, textvariable=var, validate="focus", validatecommand=(check_s, '%P'), 
+                            width=20,  justify="center",)
             ent.pack(side=LEFT, padx=5, expand=YES, anchor='e')
         
         create("The number of neurons", self.N, "digit")
@@ -511,7 +603,7 @@ class SimUI():
         def update_circle_size(value, canvas, center_x, center_y):
             canvas.delete("cell")
             r = int(float(value)) * self.hspacing * 4 / 10000
-            canvas.create_oval(center_x-r, center_y-r, center_x+r, center_y+r, fill="#4B65AF", tags="cell")
+            canvas.create_oval(center_x-r, center_y-r, center_x+r, center_y+r, fill="#53B57B", tags="cell")
 
         container = ttk.Frame(self.TopoFrame)
         container.pack(fill=X, expand=YES, pady=5)
@@ -523,67 +615,81 @@ class SimUI():
 
     def DefuaGenerator(self):
         
-        def creat_Lable_frame(master, strlist, varlist, checklist, widthlist):
-            container = ttk.Frame(master)
-            container.pack(fill=X, expand=YES, pady=0)
+        def creat_Lable_frame(master, strlist, varlist, checklist, widthlist, num = 1):
+            iter = 0
             for text,var,checktype,width in zip(strlist, varlist, checklist,widthlist):
-                lbl = ttk.Label(master=container, text=text)
-                lbl.pack(side=LEFT, padx=5, anchor='e', expand=True)
+                alig = "w"
+                if iter % num == 0:
+                    container = ttk.Frame(master)
+                    container.pack(fill=X, expand=YES, pady=0)
+                if iter % num == num - 1:
+                    alig = "e"
+                lbl = ttk.Label(master=container, text=text, width=width[0])
+                lbl.pack(side=LEFT, padx=5,  anchor=alig, expand=True)
                 check_s = container.register(lambda P: self.check_entry(P, checktype))
                 ent = ttk.Entry(master=container, textvariable=var, validate="focus", 
-                                validatecommand=(check_s, '%P'), width=width, justify="center",)
-                ent.pack(side=LEFT, padx=5, expand=YES, anchor='w')
+                                validatecommand=(check_s, '%P'), width=width[1], justify="center",)
+                ent.pack(side=LEFT, padx=5, expand=YES, anchor=alig)
+                iter = iter + 1
 
+        labelWidth = 14
+        packwidth = 20
 
         container = ttk.Frame(self.DefuaFrame)
         container.pack(fill=X, expand=YES, pady=5)
-
-        lbl = ttk.Label(master=container, text="Cell scales", width=14)
+        lbl = ttk.Label(master=container, text="Cell scales", width=labelWidth)
         lbl.pack(side=LEFT, padx=5, anchor='w', expand=True)
         check_s = container.register(lambda P: self.check_entry(P, "list"))
         ent = ttk.Entry(master=container, textvariable=self.cell_scale, validate="focus", 
-                        validatecommand=(check_s, '%P'), width=20, justify="center",)
+                        validatecommand=(check_s, '%P'), width=packwidth, justify="center",)
         ent.pack(side=LEFT, padx=5, expand=YES, anchor='w')
 
-        lbl = ttk.Label(master=container, text="dt", width=5)
+        container = ttk.Frame(self.DefuaFrame)
+        container.pack(fill=X, expand=YES, pady=5)
+        lbl = ttk.Label(master=container, text="dt", width=labelWidth)
         lbl.pack(side=LEFT, padx=5, anchor='w', expand=True)
         check_s = container.register(lambda P: self.check_entry(P, "float"))
         ent = ttk.Entry(master=container, textvariable=self.dt, validate="focus", 
-                        validatecommand=(check_s, '%P'), width=5, justify="center",)
+                        validatecommand=(check_s, '%P'), width=packwidth, justify="center",)
         ent.pack(side=LEFT, padx=5, expand=YES, anchor='w')
 
-        lbl = ttk.Label(master=container, text="Multiple delays",  width=14)
+        container = ttk.Frame(self.DefuaFrame)
+        container.pack(fill=X, expand=YES, pady=5)
+        lbl = ttk.Label(master=container, text="Multiple delays",  width=labelWidth)
         lbl.pack(side=LEFT, padx=5, anchor='w', expand=True)
         check_s = container.register(lambda P: self.check_entry(P, "list"))
         ent = ttk.Entry(master=container, textvariable=self.multiple, validate="focus", 
-                        validatecommand=(check_s, '%P'), width=8, justify="center",)
+                        validatecommand=(check_s, '%P'), width=packwidth, justify="center",)
         ent.pack(side=LEFT, padx=5, expand=YES, anchor='w')
 
 
 
         container = ttk.Frame(self.DefuaFrame)
         container.pack(fill=X, expand=YES, pady=5)
-
-        lbl = ttk.Label(master=container, text="Generation prob", width=14)
+        lbl = ttk.Label(master=container, text="Generation prob", width=labelWidth)
         lbl.pack(side=LEFT, padx=5, anchor='w', expand=True)
         check_s = container.register(lambda P: self.check_entry(P, "list"))
         ent = ttk.Entry(master=container, textvariable=self.cell_prob, validate="focus", 
-                        validatecommand=(check_s, '%P'), width=20, justify="center",)
+                        validatecommand=(check_s, '%P'), width=packwidth, justify="center",)
         ent.pack(side=LEFT, padx=5, expand=YES, anchor='w')
 
 
-        lbl = ttk.Label(master=container, text="Epoch", width=5)
+        container = ttk.Frame(self.DefuaFrame)
+        container.pack(fill=X, expand=YES, pady=5)
+        lbl = ttk.Label(master=container, text="Epoch", width=labelWidth)
         lbl.pack(side=LEFT, padx=5, anchor='w', expand=True)
         check_s = container.register(lambda P: self.check_entry(P, "digit"))
         ent = ttk.Entry(master=container, textvariable=self.epoch, validate="focus", 
-                        validatecommand=(check_s, '%P'), width=5, justify="center",)
+                        validatecommand=(check_s, '%P'), width=packwidth, justify="center",)
         ent.pack(side=LEFT, padx=5, expand=YES, anchor='w')
 
-        lbl = ttk.Label(master=container, text="Interval", width=14)
+        container = ttk.Frame(self.DefuaFrame)
+        container.pack(fill=X, expand=YES, pady=5)
+        lbl = ttk.Label(master=container, text="Interval", width=labelWidth)
         lbl.pack(side=LEFT, padx=5, anchor='w', expand=True)
         check_s = container.register(lambda P: self.check_entry(P, "digit"))
         ent = ttk.Entry(master=container, textvariable=self.interval, validate="focus", 
-                        validatecommand=(check_s, '%P'), width=8, justify="center",)
+                        validatecommand=(check_s, '%P'), width=packwidth, justify="center",)
         ent.pack(side=LEFT, padx=5, expand=YES, anchor='w')
 
 
@@ -596,8 +702,8 @@ class SimUI():
         strlist = ["tau_s", "tau_t", "A1", "A2", "theta_p", "theta_n"]
         varlist = [self.tau_s, self.tau_t, self.A1, self.A2, self.theta_p, self.theta_n]
         checklist = ["digit", "digit", "float", "float", "float", "float"]
-        widthlist = [4,4,3,3,5,5]
-        creat_Lable_frame(self.DefuaFrame_STDP, strlist, varlist, checklist, widthlist)
+        widthlist = [(6,5),(6,5),(6,5),(6,5),(6,5),(6,5)]
+        creat_Lable_frame(self.DefuaFrame_STDP, strlist, varlist, checklist, widthlist, 2)
 
         # STP and Hom
         container = ttk.Frame(self.DefuaFrame)
@@ -608,7 +714,7 @@ class SimUI():
         strlist = ["U", "tau_d", "tau_f"]
         varlist = [self.U, self.tau_d, self.tau_f]
         checklist = ["float", "float", "float"]
-        widthlist = [4,4,4]
+        widthlist = [(6,5),(6,5),(6,5)]
         creat_Lable_frame(self.DefuaFrame_STP, strlist, varlist, checklist, widthlist)
 
 
@@ -616,20 +722,28 @@ class SimUI():
         self.DefuaFrame_Hom = ttk.Labelframe(container, text=option_text, padding=15)
         self.DefuaFrame_Hom.pack(expand=YES, pady=5, side=LEFT, padx=5, fill=X)
 
-        lbl = ttk.Label(master=self.DefuaFrame_Hom, text="Max weight")
+        container = ttk.Frame(self.DefuaFrame_Hom)
+        container.pack(fill=X, expand=YES, pady=5)
+        lbl = ttk.Label(master=container, text="Max weight")
         lbl.pack(side=LEFT, padx=5, anchor='w', expand=True)
         check_s = self.DefuaFrame_Hom.register(lambda P: self.check_entry(P, "float"))
-        ent = ttk.Entry(master=self.DefuaFrame_Hom, textvariable=self.w_bound, validate="focus", 
+        ent = ttk.Entry(master=container, textvariable=self.w_bound, validate="focus", 
                         validatecommand=(check_s, '%P'), width=4, justify="center",)
-        ent.pack(side=LEFT, padx=5, expand=YES, anchor='w')
-        label = ttk.Label(self.DefuaFrame_Hom, text="Lateral inh")
-        label.pack(side=LEFT, padx=5, anchor='e', expand=True)
-        lateral_button = ttk.Checkbutton(self.DefuaFrame_Hom, variable=self.lateral_inh, onvalue=1, offvalue=0, bootstyle="round-toggle")
-        lateral_button.pack(side=LEFT, padx=5, expand=YES, anchor='w')
-        lbl = ttk.Label(master=self.DefuaFrame_Hom, text="Type")
-        lbl.pack(side=LEFT, padx=5, anchor='e', expand=True)
-        combobox = ttk.Combobox(master=self.DefuaFrame_Hom, state='readonly', textvariable=self.homeo_type, values=['norm', 'exp',], width=5)
-        combobox.pack(side=LEFT, padx=5, anchor='w')
+        ent.pack(side=LEFT, padx=5, expand=YES, anchor='e')
+
+        container = ttk.Frame(self.DefuaFrame_Hom)
+        container.pack(fill=X, expand=YES, pady=5)
+        label = ttk.Label(container, text="Lateral inh")
+        label.pack(side=LEFT, padx=5, anchor='w', expand=True)
+        lateral_button = ttk.Checkbutton(container, variable=self.lateral_inh, onvalue=1, offvalue=0, bootstyle="round-toggle")
+        lateral_button.pack(side=LEFT, padx=5, expand=YES, anchor='e')
+
+        container = ttk.Frame(self.DefuaFrame_Hom)
+        container.pack(fill=X, expand=YES, pady=5)
+        lbl = ttk.Label(master=container, text="Type")
+        lbl.pack(side=LEFT, padx=5, anchor='w', expand=True)
+        combobox = ttk.Combobox(master=container, state='readonly', textvariable=self.homeo_type, values=['norm', 'exp',], width=5)
+        combobox.pack(side=LEFT, padx=5, anchor='e')
 
 
         # Short- and Long- range synaptic
@@ -638,29 +752,31 @@ class SimUI():
 
         option_text = "Short-range synaptic"
         self.DefuaFrame_short = ttk.Labelframe(container, text=option_text, padding=15)
-        self.DefuaFrame_short.pack(pady=5, side=LEFT)
-        strlist = ["Max length", "Connect prob"]
+        self.DefuaFrame_short.pack(fill=X, expand=YES, pady=5)
+        strlist = ["Max len", "Prob"]
         varlist = [self.connect_len, self.near_p]
         checklist = ["float", "float"]
-        widthlist = [8,8]
-        creat_Lable_frame(self.DefuaFrame_short, strlist, varlist, checklist, widthlist)
+        widthlist = [(7,4),(4,7)]
+        creat_Lable_frame(self.DefuaFrame_short, strlist, varlist, checklist, widthlist, 2)
 
+        container = ttk.Frame(self.DefuaFrame)
+        container.pack(fill=X, expand=YES, pady=5)
         option_text = "Long-range synaptic"
         self.DefuaFrame_long = ttk.Labelframe(container, text=option_text, padding=15)
         self.DefuaFrame_long.pack(pady=5, side=LEFT, padx = 5)
         strlist = ["Pre neuron"]
         varlist = [self.far_n,]
         checklist = ["digit",]
-        widthlist = [4]
+        widthlist = [(6,5)]
         creat_Lable_frame(self.DefuaFrame_long, strlist, varlist, checklist, widthlist)
 
         option_text = "Structural plasticity"
         self.DefuaFrame_stru = ttk.Labelframe(container, text=option_text, padding=15)
         self.DefuaFrame_stru.pack(expand=YES, pady=5, side=LEFT, padx = 5, fill=X)
-        label = ttk.Label(self.DefuaFrame_stru, text="Dynamic del")
-        label.pack(side=LEFT, padx=5, anchor='e', expand=True)
+        label = ttk.Label(self.DefuaFrame_stru, text="Dyn del", width=8)
+        label.pack(side=LEFT, padx=5, anchor='w', expand=True)
         lateral_button = ttk.Checkbutton(self.DefuaFrame_stru, variable=self.dy_delete, onvalue=1, offvalue=0, bootstyle="round-toggle")
-        lateral_button.pack(side=LEFT, padx=5, expand=YES, anchor='w')
+        lateral_button.pack(side=LEFT, padx=5, expand=YES, anchor='e')
         
 
         

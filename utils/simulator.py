@@ -11,6 +11,7 @@ import brainpy as bp
 import brainpy.math as bm
 import tkinter as tk
 import pickle
+# import gif
 
 
 class SNN(bp.DynamicalSystem):
@@ -119,10 +120,45 @@ def getModel(args):
     else:
         raise("Mode error!")
 
+
+
+def dyn_draw(i, spikes, time, index, x_ticks, prV, r, spikes_, width):
+    plt.subplot(2,3,1)
+    plt.xlim(0, bm.get_dt() * (i+1))
+    plt.ylim(0, spikes.shape[1])
+    plt.scatter(time, index, marker=".", s=8, color =(75/255, 101/255, 175/255))
+    plt.xlabel("Time (s)")
+    plt.ylabel("Neuron index")
+
+    plt.subplot(2,3,2)
+    
+    plt.pcolormesh(prV.T)
+    plt.xlabel("Time ({:.2f}s)".format(bm.get_dt()))
+    plt.ylabel("Neuron index")
+    plt.colorbar()
+
+    plt.subplot(2,3,3)
+    plt.pcolormesh(np.sum(spikes[i:r], axis=0).reshape((8,8)).T, cmap="Blues")
+
     
 
+    plt.subplot(2,1,2)
+    plt.bar(x_ticks + width/2, spikes_, width = width, label='Framework', color = (75/255, 101/255, 175/255))
+    plt.xlim(0, spikes.shape[1])
+    plt.ylim(0, np.max(spikes_)+1)
+    plt.ylabel("Spike count")
+    plt.xlabel("MEA index")
+    plt.suptitle('Time: {:.2f}s'.format(r * bm.get_dt()), fontsize=15)
 
-def draw_res(spikes, savepath, real_data, interval):
+    plt.pause(0.0001)
+
+
+# @gif.frame
+# def dyn_draw_gif(i, spikes, time, index, x_ticks, prV, r, spikes_, width):
+#     dyn_draw(i, spikes, time, index, x_ticks, prV, r, spikes_, width)
+
+
+def draw_res(spikes, savepath, real_data, interval, Vmat):
 
     for i in range(0, spikes.shape[0], interval):
         idex = np.sum(spikes[i:i+interval], axis=0) >= 1
@@ -137,10 +173,10 @@ def draw_res(spikes, savepath, real_data, interval):
     if real_data is None:
 
         plt.figure(figsize=(10, 6))
-        # fig, axs = 
         plt.ion()
         ts = np.arange(spikes.shape[0]) * bm.get_dt()
         i = 0
+        # frames = []
         while i < spikes.shape[0]:
             plt.clf()
             plt.subplots_adjust(wspace =0.5, hspace = 0.3)
@@ -150,35 +186,19 @@ def draw_res(spikes, savepath, real_data, interval):
             elements = np.where(spikes[:i+1] > 0.)
             index = elements[1]
             time = ts[elements[0]]
+            prV = Vmat[:i]
 
-            plt.subplot(2,2,1)
-            plt.xlim(0, bm.get_dt() * (i+1))
-            plt.ylim(0, spikes.shape[1])
-            plt.scatter(time, index, marker=".", s=8, color =(75/255, 101/255, 175/255))
-            plt.xlabel("Time (s)")
-            plt.ylabel("Neuron index")
-
-            plt.subplot(2,2,2)
-            plt.pcolormesh(np.sum(spikes[i:r], axis=0).reshape((8,8)).T, cmap="Blues")
-
-
-            plt.subplot(2,1,2)
             x_ticks = np.arange(0, spikes.shape[1])
             spikes_ = np.sum(spikes[:r], axis=0).reshape(-1)
             width = 0.4
-            plt.bar(x_ticks + width/2, spikes_, width = width, label='Framework', color = (75/255, 101/255, 175/255))
-            plt.xlim(0, spikes.shape[1])
-            plt.ylim(0, np.max(spikes_)+1)
-            plt.ylabel("Spike count")
-            plt.xlabel("MEA index")
-            plt.suptitle('Time: {:.2f}s'.format(i * bm.get_dt()), fontsize=15)
 
+            # frames.append(dyn_draw_gif(i, spikes, time, index, x_ticks, prV, r, spikes_, width))
+            dyn_draw(i, spikes, time, index, x_ticks, prV, r, spikes_, width)
             i = min(i + 10, spikes.shape[0])
-            plt.pause(0.0001)
 
         plt.ioff()
         plt.show()
-
+        # gif.save(frames, os.path.join(savepath, "res.gif"), duration=1000)
         # plt.savefig(os.path.join(savepath, "outcomes_sim.png"), dpi = 300)
     
     else:
@@ -273,11 +293,11 @@ def running(real_data, topology, net, args):
     #     p[:,i] = 0
     #bp.visualize.raster_plot(bm.arange(steps * (during)), p, show=True, color="r")
 
-    plt.pcolormesh(trainer.mon["n.V"][:, 0, :])
-    plt.colorbar()
-    plt.show()
+    # plt.pcolormesh(trainer.mon["n.V"][:, 0, :])
+    # plt.colorbar()
+    # plt.show()
 
-    draw_res(spikes, savepath, real_data, interval)
+    draw_res(spikes, savepath, real_data, interval, trainer.mon["n.V"][:, 0, :])
 
 
 

@@ -1,9 +1,8 @@
 .vscode
 __*
 data
-logs
 *.bp
 temp
-*.gif
 data
-*.pkl
+build
+*.spec

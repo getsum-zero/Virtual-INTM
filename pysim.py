@@ -142,7 +142,7 @@ class MEAinput():
             master=container,
             text="Submit",
             command=lambda: self.create_Simulator(args),
-            bootstyle=SUCCESS,
+            bootstyle=PRIMARY,
             width=10,
         )
         sub_btn.pack(side=LEFT, padx=5)

@@ -20,7 +20,7 @@ planar_topology:
   - 3.0
   - 5.0
   - 7.0
-  cell_unit: 0.034754999999999994
+  cell_unit: 0.00497
   connect_len: 0.3
   draw_3D_face: false
   draw_connet: false
@@ -127,5 +127,5 @@ synapses:
     U: 0.2
     tau_d: 2
     tau_f: 2
-  synapses_type: BioNMDA
+  synapses_type: NMDA
   w_bound: 10
