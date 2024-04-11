@@ -31,13 +31,9 @@ Pyinstaller -F -w -i XXX.ico pysim.py 	# 打包指定exe图标打包
   
 * 结果：
 
-  * 拟合结果
+  <img src="./img/fitting.png" alt="image-20240411223200113" style="zoom:50%;" /><img src="./img/res.gif" alt="res" style="zoom:40%;" />
 
-    <img src="./img/fitting.png" alt="image-20240411223200113" style="zoom:50%;" />
   
-  * 模拟结果
-  
-  <img src="./img/res.gif" alt="res" style="zoom:80%;" />
 
 
 
