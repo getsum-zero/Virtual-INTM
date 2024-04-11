@@ -18,7 +18,7 @@ Pyinstaller -F -w -i XXX.ico pysim.py 	# 打包指定exe图标打包
 
 执行 `pysim.exe` ：
 
-* 进入初始界面，输入MEA尺寸（默认$8 \times 8$​​ ）
+* 进入初始界面，输入MEA尺寸（默认8 x 8​​ ）
 
   <details>
   <summary>初始界面</summary>
@@ -27,20 +27,30 @@ Pyinstaller -F -w -i XXX.ico pysim.py 	# 打包指定exe图标打包
 
 * 提交后进入主界面；点击 `Select a Mode` / `Simulation`，选择 `egs/`文件夹，点击运行即可
 
-  <details>
-  <summary>运行</summary>
-  <img src="./img/main.png" alt="image-20240408172836239" style="zoom:50%;" />
-  </details>
-
+  <img src="./img/main.png" alt="image-20240408172836239" style="zoom:30%;" />
+  
 * 结果：
 
+  * 拟合结果
+
+    <img src="C:\Users\getsum\AppData\Roaming\Typora\typora-user-images\image-20240411223200113.png" alt="image-20240411223200113" style="zoom:80%;" />
+  
+  * 模拟结果
+  
   <img src="./img/res.gif" alt="res" style="zoom:80%;" />
 
-  
 
 
+### 介绍
 
+模拟器页面主要包括6个组件：
 
+* 模式选择：包括**拟合**真实数据 (fitting)  和  模拟 (simulation)
+* 构建刺激范式：控制哪些MEA发放刺激
+* 核心参数（必须选择）：选择神经元类型、突触类型、长期可塑性模型
+* 运行参数
+* 拓扑结构
+* 其他参数
 
 ### Note 
 
@@ -48,8 +58,8 @@ Pyinstaller -F -w -i XXX.ico pysim.py 	# 打包指定exe图标打包
   由于使用`cpu`，因此速度较慢，需要1~2分钟左右；后续增加等待时间进度条
 * 由于jax原因，导致打包出现失败，这里简单将出现问题的代码注释
   https://github.com/google/jax/issues/17705
-   File "jax\_src\interpreters\mlir.py", line 711, in lower_jaxpr_to_module
-  jaxlib.mlir._mlir_libs._site_initialize.<locals>.MLIRError: Verification failed
+   `File "jax\_src\interpreters\mlir.py", line 711, in lower_jaxpr_to_module
+  jaxlib.mlir._mlir_libs._site_initialize.<locals>.MLIRError: Verification failed`
 
 ### Todo
 
