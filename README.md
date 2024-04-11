@@ -27,13 +27,13 @@ Pyinstaller -F -w -i XXX.ico pysim.py 	# 打包指定exe图标打包
 
 * 提交后进入主界面；点击 `Select a Mode` / `Simulation`，选择 `egs/`文件夹，点击运行即可
 
-  <img src="./img/main.png" alt="image-20240408172836239" style="zoom:30%;" />
+  <img src="./img/main.png" alt="image-20240408172836239" style="zoom:20%;" />
   
 * 结果：
 
   * 拟合结果
 
-    <img src="C:\Users\getsum\AppData\Roaming\Typora\typora-user-images\image-20240411223200113.png" alt="image-20240411223200113" style="zoom:80%;" />
+    <img src="./img/fitting.png" alt="image-20240411223200113" style="zoom:50%;" />
   
   * 模拟结果
   
