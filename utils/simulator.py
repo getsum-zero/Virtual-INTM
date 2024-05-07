@@ -160,18 +160,16 @@ def dyn_draw(i, spikes, time, index, x_ticks, prV, r, spikes_, width):
 
 def draw_res(spikes, savepath, real_data, interval, Vmat):
 
-    for i in range(0, spikes.shape[0], interval):
-        idex = np.sum(spikes[i:i+interval], axis=0) >= 1
-        if interval > 1:
-            spikes[i+1:i+interval] = 0
-        spikes[i] = idex
-
     # bp.visualize.raster_plot(bm.arange(spikes.shape[0]) , spikes, show=False)
     # plt.savefig(savepath + "spikes.png", dpi = 300)
     # plt.close()
 
     if real_data is None:
-
+        for i in range(0, spikes.shape[0], interval):
+            idex = np.sum(spikes[i:i+interval], axis=0) > 0
+            if interval > 1:
+                spikes[i+1:i+interval] = 0
+            spikes[i] = idex
         plt.figure(figsize=(10, 6))
         plt.ion()
         ts = np.arange(spikes.shape[0]) * bm.get_dt()
@@ -203,16 +201,13 @@ def draw_res(spikes, savepath, real_data, interval, Vmat):
     
     else:
 
-        spikes = np.sum(spikes, axis=0)
-        spikes = spikes / (np.sum(spikes) + 1e-8)
-
         plt.figure(figsize=(10, 6))
         plt.subplots_adjust(wspace =0.5, hspace = 0.3)
-        plt.subplot(2,2,1)
+        plt.subplot(2,3,1)
         plt.pcolormesh(real_data.reshape((8,8)).T, cmap="Blues")
         plt.colorbar()
 
-        plt.subplot(2,2,2)
+        plt.subplot(2,3,2)
         plt.pcolormesh(spikes.reshape((8,8)).T, cmap="Blues")
         plt.colorbar()
 
@@ -226,6 +221,14 @@ def draw_res(spikes, savepath, real_data, interval, Vmat):
         plt.bar(x_ticks + width/2, spikes, width = width, label='Framework')
         plt.ylabel("Firing rate")
         plt.xlabel("MEA index")
+        plt.legend()
+
+        plt.subplot(2,3,3)
+        cum_real_data = np.cumsum(real_data)
+        cum_spikes = np.cumsum(spikes)
+        l = np.arange(cum_real_data.shape[0])
+        plt.plot(l, cum_real_data, label='Real-world')
+        plt.plot(l, cum_spikes, label='Framework')
         plt.legend()
 
         # plt.subplot(1,4,4)
@@ -266,21 +269,39 @@ def running(real_data, topology, net, args):
     idx = bm.arange(during) * steps
     input_M[idx,0,:] = inputdata
 
+    epoch_spike = []
+
     for i in range(epoch):
         net.set_para(mod = True)
         trainer.run(inputs = input_M, reset_state=True)
-    
+        
+        spikes = np.zeros((during * steps, 64))
+        for i in range(topology.input.shape[1]):
+            x = topology.input[0,i]
+            y = topology.input[1,i]
+            spikes[:,x] += trainer.mon["n.spike"][:,0,y]
+        
+        for i in range(0, spikes.shape[0], interval):
+            idex = np.sum(spikes[i:i+interval], axis=0) > 0
+            if interval > 1:
+                spikes[i+1:i+interval] = 0
+            spikes[i] = idex
 
+        spikes = np.sum(spikes, axis=0)
+        spikes = spikes / (np.sum(spikes) + 1e-8)
+        epoch_spike.append(spikes)
+        
+    epoch_spike = np.array(epoch_spike)
+    epoch_spike = np.sum(epoch_spike, axis=0) / epoch
+    
+    
     with open(os.path.join(savepath, 'topology.pkl'), 'wb') as file:
         pickle.dump(topology, file)
     print("Saving Topology into!" + os.path.join(savepath, "topology.yaml"))
     bp.checkpoints.save_pytree(os.path.join(savepath, "model.bp"), { 'net': net.state_dict() })
 
-    spikes = np.zeros((during * steps, 64))
-    for i in range(topology.input.shape[1]):
-        x = topology.input[0,i]
-        y = topology.input[1,i]
-        spikes[:,x] += trainer.mon["n.spike"][:, 0, y]
+    draw_res(epoch_spike, savepath, real_data, interval, trainer.mon["n.V"][:, 0, :])
+   
 
     # plt.pcolormesh(trainer.mon["n.input"][:, 0, :])
     # plt.colorbar()
@@ -297,7 +318,7 @@ def running(real_data, topology, net, args):
     # plt.colorbar()
     # plt.show()
 
-    draw_res(spikes, savepath, real_data, interval, trainer.mon["n.V"][:, 0, :])
+    
 
 
 
