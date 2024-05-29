@@ -8,3 +8,4 @@ build
 *.spec
 *.exe
 releases
+dist

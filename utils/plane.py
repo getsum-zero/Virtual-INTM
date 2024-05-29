@@ -28,38 +28,54 @@ find method:
 
 '''
 
+ele_color = "#D8D8D8"
+neur_trans_color = "#608BDF"
+neur_color = "#F7E1ED"
 
 def fromRealdata(path, shape, 
                  draw_ori = False, 
                  draw_p = False,
-                 save_path = "./log/"
+                 save_path = "./log/",
+                 stTime = 0,
+                 cutTime = 10,
                  ):
     #record = h5py.File(path)
     record = scio.loadmat(path)
 
     dt = bm.get_dt()
     steps = int(1 / bm.get_dt())
-    cutTime = steps * 500
-    spikes = np.zeros((cutTime, np.prod(shape)))
+    total = steps * 500
+    spikes = np.zeros((total, np.prod(shape)))
+    stTime = stTime * steps
+    cutTime = cutTime * steps
 
     isExists=os.path.exists(save_path)
     if not isExists:
         os.makedirs(save_path) 
 
-    for key, val in record.items():
+    try:
+        for key, val in record.items():
+            if key[-2:] != "nr": continue
+            if key[11:13].isdigit() == False:  continue 
+            data = np.array(val)
+            pos = int(key[11:13]) #AnSt_Label_
+            pos = (pos // 10 - 1) * 8 + pos % 10 - 1
+            data = np.unique(np.round(data / dt)).astype(np.int32)
+            spikes[data[data <= total], pos] = 1
+        print(np.sum(spikes))
+        assert np.sum(spikes) > 0
+    except:    
+        for key, val in record.items():
+            if key[-2:] != "nr": continue
+            if key[19:21].isdigit() == False:  continue 
+            data = np.array(val)
+            pos = int(key[19:21]) #AnSt_Label_E_00159_
+            pos = (pos // 10 - 1) * 8 + pos % 10 - 1
+            data = np.unique(np.round(data / dt)).astype(np.int32)
+            spikes[data[data <= total], pos] = 1
+        
+    spikes = spikes[stTime:cutTime+stTime]
 
-        if key[-2:] != "nr": continue
-        if key[11:13].isdigit() == False:  continue 
-        data = np.array(val)
-        pos = int(key[11:13]) #AnSt_Label_
-        pos = (pos // 10 - 1) * 8 + pos % 10 - 1
-
-        # data = np.array(val)
-        # pos = int(key[19:21]) #AnSt_Label_E_00159_
-        # pos = (pos // 10 - 1) * 8 + pos % 10 - 1
-        data = np.unique(np.round(data / dt)).astype(np.int32)
-        spikes[data[data <= cutTime], pos] = 1
-    
     p = np.sum(spikes, axis=0)
     p = p / np.sum(p)
     p = p.reshape(shape)
@@ -77,7 +93,7 @@ def fromRealdata(path, shape,
         plt.cla()
         plt.close()
 
-    return p
+    return spikes
         
 
 
@@ -218,18 +234,20 @@ class plane():
             axes.set_xlim(0, self.Nshape[0] * self.unit)
             axes.set_ylim(0, self.Nshape[1] * self.unit)
             for i in range(len(st)):
-                draw_circle = plt.Circle((st[i][0] + self.unit / 2, st[i][1]+ self.unit / 2), self.ele_scale, color = (127/255, 203/255, 164/255))
+                draw_circle = plt.Circle((st[i][0] + self.unit / 2, st[i][1]+ self.unit / 2), self.ele_scale, color = ele_color)
                 axes.add_artist(draw_circle)
 
             for i in range(len(point[0])):
-                draw_circle = plt.Circle((point[0][i], point[1][i]), point[2][i], color = (244/255,111/255,68/255))
+                draw_circle = plt.Circle((point[0][i], point[1][i]), point[2][i], color = neur_color)
                 axes.add_artist(draw_circle)
             
             input = loc[input_id[1]]
             for i in range(input.shape[0]):
-                draw_circle = plt.Circle((input[i,0], input[i,1]), input[i,2], color = (75/255, 101/255, 175/255))
+                draw_circle = plt.Circle((input[i,0], input[i,1]), input[i,2], color = neur_trans_color)
                 axes.add_artist(draw_circle)
             plt.grid(True)
+            plt.xticks([])
+            plt.yticks([])
             #plt.axis("equal")
             plt.savefig(os.path.join(self.savepath, "sim_points.png"), dpi = 300)
             plt.cla()

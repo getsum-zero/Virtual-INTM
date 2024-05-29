@@ -2,8 +2,6 @@ import tkinter as tk
 from tkinter import filedialog
 import numpy as np
 import tkinter.font as font
-from utils.check import check_covert
-from utils.simulator import simulate
 import yaml
 import os
 import ttkbootstrap as ttk
@@ -27,12 +25,14 @@ args = {
         "response" : None, 
         "draw_ori": False,              
         "draw_p": False, 
+        "stTime": 0,
+        "cutTime": 10,
         "savepath": "./logs/outcomes/",
         "loadpath": "./logs/",
     },
     "planar_topology":{
-        "fire_n": "30000",
-        "N": "2000",
+        "fire_n": "10000",
+        "N": "1500",
         "unit": "1",
         "ele_scale": "0.35",
         "cell_unit": "0.005",
@@ -77,13 +77,14 @@ args = {
     
 
     "Setting":{
-        "platform": None,
+        "platform": "cpu",
         "cuda_devices": "0",
         "dt": "0.01"
     },
     "Running":{
         "savepath": "./logs/",
-        "cons": "2000",
+        "cons": "500",
+        "warmup": "15",
         "during": "10",
         "epoch": "1",
         "interval": "2", 
