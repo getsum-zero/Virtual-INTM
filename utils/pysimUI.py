@@ -38,7 +38,8 @@ image_files = {
             "up": "icons8_double_up_24px.png",
             "right": 'icons8_double_right_24px.png', 
             'new': 'icons8_add_book_24px.png',
-            'setting': 'icons8_settings_24px.png'
+            'setting': 'icons8_settings_24px.png',
+            "clear": 'icons8_stop_24px_1.png'
             # 'logo': 'backup.png'
         }
 
@@ -183,6 +184,8 @@ class SimUI():
         self.epoch = tk.StringVar(value = "1")
         self.interval = tk.StringVar(value = "2")
         self.warmup = tk.StringVar(value = "10")
+        self.stTime = tk.StringVar(value = "0")
+        self.cutTime = tk.StringVar(value = "10")
 
     def args2var(self):
         if self.args["real_world_data"]["mode"] == None:
@@ -261,6 +264,8 @@ class SimUI():
         self.epoch.set(str(self.args["Running"]["epoch"]))
         self.interval.set(str(self.args["Running"]["interval"]))
         self.warmup.set(str(self.args["Running"]["warmup"]))
+        self.stTime.set(str(self.args["real_world_data"]["stTime"]))
+        self.cutTime.set(str(self.args["real_world_data"]["cutTime"]))
 
 
     def var2args(self):
@@ -305,6 +310,9 @@ class SimUI():
         self.args["Running"]["epoch"] = self.epoch.get()
         self.args["Running"]["interval"] = self.interval.get()
         self.args["Running"]["warmup"] = self.warmup.get()
+
+        self.args["real_world_data"]["stTime"] = self.stTime.get()
+        self.args["real_world_data"]["cutTime"] = self.cutTime.get()
 
     def check_entry(self, x, type):
         if type == "digit":
@@ -362,6 +370,32 @@ class SimUI():
                 self.file_label.config(bootstyle="default")
                 self.config_label.config(bootstyle="default")
 
+        def load_args():
+            file_path = filedialog.askopenfilename(title="Open", initialdir = "./",
+                            filetypes=[("mat files", "*.yaml")])
+            if file_path:
+                args = copy.deepcopy(self.args)
+                response = self.args["real_world_data"]["response"]
+                mode = self.args["real_world_data"]["mode"]
+                try:
+                    rf = open(file_path, mode='r')
+                    crf = rf.read()
+                    rf.close()
+                    self.args = yaml.load(stream=crf, Loader=yaml.FullLoader)
+                    self.args["real_world_data"]["mode"] = "simulation"
+                    self.args["real_world_data"]["loadpath"] = file_path
+                    self.args["real_world_data"]["response"] = response
+                    self.args["real_world_data"]["mode"] = mode
+                    self.args2var()
+                except:
+                    self.args = args
+                    tk.messagebox.showerror("Error", "Configuration file error")
+
+
+        
+
+                
+
         def select_folder():
             file_path = filedialog.askdirectory(title ="Select a folder", 
                                                 initialdir = "./", mustexist = True)
@@ -399,8 +433,12 @@ class SimUI():
                                     bootstyle="success",
                                     command=lambda: select_file())
         self.file_button.pack(side=LEFT, padx=10)
-        self.file_label = ttk.Entry(container, textvariable=self.filetext, state="readonly", width=45)
-        self.file_label.pack(side=LEFT, padx=5, fill=X, expand=YES,)
+        self.file_label = ttk.Entry(container, textvariable=self.filetext, state="readonly", width=50)
+        self.file_label.pack(side=LEFT, padx=5, fill=X,) #expand=YES,)
+
+        load = ttk.Button(container, text='Preset', command=load_args, bootstyle=style,
+                         image='setting',  compound=LEFT,  width=5, )
+        load.pack(side=RIGHT, padx=5, ipadx=5, ipady=5, fill=X,)
 
         # simulation
         container = ttk.Frame(self.ModeFrame)
@@ -439,6 +477,8 @@ class SimUI():
                     yaml.dump(self.args, file)
                 # shutil.move(os.path.join(self.args["Running"]["savepath"] , "model.bp"), os.path.join(file_path, "model.bp"))
                 shutil.move(os.path.join(self.args["Running"]["savepath"] , "topology.pkl"), os.path.join(file_path, "topology.pkl"))
+                shutil.move(self.args["Running"]["savepath"], os.path.join(file_path, "outputs"))
+
                 tk.messagebox.showinfo(title='', message="Saved successfully")
             except Exception as e:
                 tk.messagebox.showerror(title='Error', message=str(e))
@@ -494,13 +534,13 @@ class SimUI():
                 self.args["real_world_data"]["stimulus"][i] = 0
                 self.var_list[i].set(0)
 
-            xx = [self.simusRow // 2 - 1, self.simusRow // 2]
-            yy = [self.simusCol // 2 - 1, self.simusCol // 2]
-            for i in xx:
-                for j in yy:
-                    id = i * self.simusCol + j
-                    self.args["real_world_data"]["stimulus"][id] = 1
-                    self.var_list[id].set(1)
+            # xx = [self.simusRow // 2 - 1, self.simusRow // 2]
+            # yy = [self.simusCol // 2 - 1, self.simusCol // 2]
+            # for i in xx:
+            #     for j in yy:
+            #         id = i * self.simusCol + j
+            #         self.args["real_world_data"]["stimulus"][id] = 1
+            #         self.var_list[id].set(1)
 
 
         loadFrame = ttk.Frame(self.StimuFrame,  style=style_p)
@@ -509,8 +549,8 @@ class SimUI():
                          image='new',  compound=LEFT,  width=5, )
         load.pack(side=LEFT, padx=5, ipadx=5, ipady=5)
     
-        load = ttk.Button(loadFrame, text='Preset', command=preSetting, bootstyle=style,
-                         image='setting',  compound=LEFT,  width=5, )
+        load = ttk.Button(loadFrame, text='Clear', command=preSetting, bootstyle=style,
+                         image='clear',  compound=LEFT,  width=5, )
         load.pack(side=LEFT, padx=5, ipadx=5, ipady=5)
 
         
@@ -659,14 +699,7 @@ class SimUI():
         ent.pack(side=LEFT, padx=5, expand=YES, anchor='w')
 
 
-        container = ttk.Frame(self.DefuaFrame)
-        container.pack(fill=X, expand=YES, pady=5)
-        lbl = ttk.Label(master=container, text="Cuda id", width=labelWidth)
-        lbl.pack(side=LEFT, padx=5, anchor='w', expand=True)
-        check_s = container.register(lambda P: self.check_entry(P, "digit"))
-        ent = ttk.Entry(master=container, textvariable=self.cuda_id, validate="focus", 
-                        validatecommand=(check_s, '%P'), width=packwidth, justify="center",)
-        ent.pack(side=LEFT, padx=5, expand=YES, anchor='w')
+       
 
         container = ttk.Frame(self.DefuaFrame)
         container.pack(fill=X, expand=YES, pady=5)
@@ -691,12 +724,21 @@ class SimUI():
 
         container = ttk.Frame(self.DefuaFrame)
         container.pack(fill=X, expand=YES, pady=5)
-        lbl = ttk.Label(master=container, text="Epoch", width=labelWidth)
+        lbl = ttk.Label(master=container, text="Epoch", width=labelWidth // 2)
         lbl.pack(side=LEFT, padx=5, anchor='w', expand=True)
         check_s = container.register(lambda P: self.check_entry(P, "digit"))
         ent = ttk.Entry(master=container, textvariable=self.epoch, validate="focus", 
-                        validatecommand=(check_s, '%P'), width=packwidth, justify="center",)
+                        validatecommand=(check_s, '%P'), width=packwidth // 3, justify="center",)
         ent.pack(side=LEFT, padx=5, expand=YES, anchor='w')
+
+        container.pack(fill=X, expand=YES, pady=5)
+        lbl = ttk.Label(master=container, text="Cuda id", width=labelWidth // 2)
+        lbl.pack(side=LEFT, padx=5, anchor='w', expand=True)
+        check_s = container.register(lambda P: self.check_entry(P, "digit"))
+        ent = ttk.Entry(master=container, textvariable=self.cuda_id, validate="focus", 
+                        validatecommand=(check_s, '%P'), width=packwidth // 3, justify="center",)
+        ent.pack(side=LEFT, padx=5, expand=YES, anchor='w')
+
 
         container = ttk.Frame(self.DefuaFrame)
         container.pack(fill=X, expand=YES, pady=5)
@@ -711,6 +753,23 @@ class SimUI():
         lbl.pack(side=LEFT, padx=5, anchor='w', expand=True)
         check_s = container.register(lambda P: self.check_entry(P, "float"))
         ent = ttk.Entry(master=container, textvariable=self.warmup, validate="focus", 
+                        validatecommand=(check_s, '%P'), width=packwidth // 3, justify="center",)
+        ent.pack(side=LEFT, padx=5, expand=YES, anchor='w')
+
+
+        container = ttk.Frame(self.DefuaFrame)
+        container.pack(fill=X, expand=YES, pady=5)
+        lbl = ttk.Label(master=container, text="Start(s)", width=labelWidth // 2)
+        lbl.pack(side=LEFT, padx=5, anchor='w', expand=True)
+        check_s = container.register(lambda P: self.check_entry(P, "float"))
+        ent = ttk.Entry(master=container, textvariable=self.stTime, validate="focus", 
+                        validatecommand=(check_s, '%P'), width=packwidth // 3, justify="center",)
+        ent.pack(side=LEFT, padx=5, expand=YES, anchor='w')
+
+        lbl = ttk.Label(master=container, text="Cut(s)", width=labelWidth // 2)
+        lbl.pack(side=LEFT, padx=5, anchor='w', expand=True)
+        check_s = container.register(lambda P: self.check_entry(P, "float"))
+        ent = ttk.Entry(master=container, textvariable=self.cutTime, validate="focus", 
                         validatecommand=(check_s, '%P'), width=packwidth // 3, justify="center",)
         ent.pack(side=LEFT, padx=5, expand=YES, anchor='w')
 
@@ -802,8 +861,6 @@ class SimUI():
         
 
         
-
-
 
     def run(self):
         self.ModeGenerator()

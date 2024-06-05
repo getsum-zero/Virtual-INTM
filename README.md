@@ -57,6 +57,16 @@ Pyinstaller -F -w -i XXX.ico pysim.py 	# 打包指定exe图标打包
    `File "jax\_src\interpreters\mlir.py", line 711, in lower_jaxpr_to_module
   jaxlib.mlir._mlir_libs._site_initialize.<locals>.MLIRError: Verification failed`
 
+### Note
+* 由于神经元数目和突触数目变大，造成更多随机性；优秀的结果需要相同参数下的更多尝试
+* 每一个data目录下包括三个文件：
+  * `.mat` 原始脉冲数据文件
+  * `.txt` 刺激范式文件，8x8；可以借助UI界面的load工具载入
+  * `.yaml` 参数配置文件，包含一组精细调节的参数；可以借助UI界面的Preset工具载入
+  * `.pkl` 拓扑组织文件，主要用于simulation
+  * `outputs` 存储相关的模拟的结果
+
+
 ### Todo
 
 [1]: https://ttkbootstrap.readthedocs.io/en/latest/zh/ " ttkbootstrap"

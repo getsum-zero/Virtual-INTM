@@ -46,8 +46,8 @@ def fromRealdata(path, shape,
     steps = int(1 / bm.get_dt())
     total = steps * 500
     spikes = np.zeros((total, np.prod(shape)))
-    stTime = stTime * steps
-    cutTime = cutTime * steps
+    stTime = int(stTime * steps)
+    cutTime = int(cutTime * steps)
 
     isExists=os.path.exists(save_path)
     if not isExists:

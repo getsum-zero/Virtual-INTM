@@ -25,8 +25,8 @@ args = {
         "response" : None, 
         "draw_ori": False,              
         "draw_p": False, 
-        "stTime": 0,
-        "cutTime": 10,
+        "stTime": 60,
+        "cutTime": 120,
         "savepath": "./logs/outcomes/",
         "loadpath": "./logs/",
     },
@@ -48,7 +48,7 @@ args = {
         "draw_point": True,      
         "draw_connet": False,   
         "draw_3D_face": False,
-        "savepath": "./logs/outcomes/",
+        "savepath": "./logs/outputs/",
     },
 
     "synapses":{
@@ -82,12 +82,20 @@ args = {
         "dt": "0.01"
     },
     "Running":{
-        "savepath": "./logs/",
+        "savepath": "./logs/outputs/",
         "cons": "500",
         "warmup": "15",
         "during": "10",
         "epoch": "1",
         "interval": "2", 
+    },
+    "Neuron":{  
+        "Izhikevich":{
+            "a": 0.02,
+            "b": 0.25,
+            "c": -55,
+            "d": 0.05
+        }
     }
 }
 

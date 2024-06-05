@@ -133,11 +133,24 @@ def Marginal_Histogram(data, dt, name, path):  # 0, 1  (Time, MEA_index)
 
 def sigle_save(real_data_o, spikes_o, savepath, color):
 
-    if real_data_o == None:
+    if real_data_o is None:
         return 
     
     real_spikes = real_data_o.copy()
     spikes_trains = spikes_o.copy()
+
+    minlen = min(real_data_o.shape[0], spikes_o.shape[1])
+
+    # spike
+    steps = int(1/bm.get_dt())
+    bp.visualize.raster_plot(bm.arange(minlen * steps) / steps, spikes_o[0, :minlen], show=False, xlabel='Time (s)', ylabel="Electrodes", title='Framework')
+    plt.savefig(os.path.join(savepath, "sim_spikes.png"), dpi = 300)
+    plt.close()
+
+    steps = int(1/bm.get_dt())
+    bp.visualize.raster_plot(bm.arange(minlen * steps) / steps, real_data_o[:minlen], show=False, xlabel='Time (s)', ylabel="Electrodes", title='Real-world')
+    plt.savefig(os.path.join(savepath, "real_spikes.png"), dpi = 300)
+    plt.close()
 
     # cumsum line
     xtrick = np.arange(real_spikes.shape[1])
@@ -213,17 +226,18 @@ def sigle_save(real_data_o, spikes_o, savepath, color):
 
 
     # fire rate across time
-    
     real_mea = np.sum(real_spikes, axis=1)
-    spikes_mea = np.sum(spikes_trains, axis=1)
-    interval = int(0.2 / bm.get_dt())
-    num = int(real_mea.shape[0] / interval)
+    spikes_mea = np.mean(np.sum(spikes_trains, axis=2), axis=0)
+    interval_sim = int(0.2 / bm.get_dt())
+    num = int(spikes_mea.shape[0] / interval_sim)
+    interval_real = int(real_mea.shape[0] / num)
+
     real_mea_i = np.zeros(num)
     spikes_mea_i = np.zeros(num)
 
     for i in range(num):
-        real_mea_i[i] = np.sum(real_mea[i*interval:(i+1)*interval])
-        spikes_mea_i[i] = np.sum(spikes_mea[i*interval:(i+1)*interval])
+        real_mea_i[i] = np.sum(real_mea[i*interval_real:(i+1)*interval_real])
+        spikes_mea_i[i] = np.sum(spikes_mea[i*interval_sim:(i+1)*interval_sim])
 
 
     real_mea_i = real_mea_i / np.sum(real_mea_i)
@@ -258,4 +272,6 @@ def sigle_save(real_data_o, spikes_o, savepath, color):
     plt.yticks(idx, ytext)
     plt.savefig(os.path.join(savepath, "hist_across_time.png"), dpi = 300)
     plt.close()
+
+
 

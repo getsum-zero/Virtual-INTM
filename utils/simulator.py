@@ -22,7 +22,7 @@ real_color = "#D8D8D8"
 
 
 class SNN(bp.DynamicalSystem):
-    def __init__(self, N, topology, args):
+    def __init__(self, N, topology, args, neuron_args):
         super().__init__()
 
         neuron_type = {
@@ -36,8 +36,14 @@ class SNN(bp.DynamicalSystem):
             neuron_imp = neuron_type[args["neuron_type"]]
         except Exception as e:
             raise("Neuron model error!")
+        
+        try:
+            self.n = neuron_imp(N, **neuron_args[args["neuron_type"]])
+        except:
+            self.n = neuron_imp(N)
 
-        self.n = neuron_imp(N)
+
+        
         self.s = synapses(self.n, self.n,
                           conn=topology.cij,
                           synapses_type=args["synapses_type"],
@@ -79,6 +85,7 @@ def getModel(args):
     real_data_args = args["real_world_data"]
     topology_args = args["planar_topology"]
     synapses_args = args["synapses"]
+    neuron_args = args["Neuron"]
 
     if real_data_args["mode"] == "fitting":
         real_data = fromRealdata(real_data_args["response"], 
@@ -115,7 +122,7 @@ def getModel(args):
                     messager=np.where(np.array(real_data_args["stimulus"])>0)[0]
         )
         
-        net = SNN(N = topology_args["N"], topology = topology, args = synapses_args)
+        net = SNN(N = topology_args["N"], topology = topology, args = synapses_args, neuron_args = neuron_args)
         return real_data, topology, net
 
     elif real_data_args["mode"] == "simulation":
@@ -215,6 +222,20 @@ def draw_res(spikes, savepath, real_data, interval, Vmat):
         # plt.savefig(os.path.join(savepath, "outcomes_sim.png"), dpi = 300)
     
     else:
+
+        V = Vmat
+        # V = trainer.mon["n.V"][:, 0, :]
+        fig, ax = plt.subplots()
+        colp = ax.pcolormesh(V, )#cmap = "RdBu_r")
+        plt.colorbar(colp)
+        ax.set_title("Membrane potential")
+        ax.set_xlabel("Neuron index")
+        ax.set_ylabel("Time (s)")
+        ylabels = ax.get_yticks().tolist()
+        ylabels = (np.array(ylabels) * bm.get_dt()).tolist()
+        ax.set_yticklabels(ylabels)
+        plt.savefig(os.path.join(savepath, "V.png"), dpi = 300)
+        plt.close()
         # fig, ax = plt.subplots()
         # colp = ax.pcolormesh(V)
         # plt.colorbar(colp)
@@ -352,6 +373,9 @@ def running(args):
         # spikes = spikes / (np.sum(spikes) + 1e-8)
         epoch_spike.append(spikes)
 
+    if not os.path.exists(savepath):
+        os.makedirs(savepath)
+
     with open(os.path.join(savepath, 'topology.pkl'), 'wb') as file:
         pickle.dump(topology, file)
     print("Saving Topology into!" + os.path.join(savepath, "topology.yaml"))  
@@ -359,22 +383,9 @@ def running(args):
     sigle_save(real_data, np.array(epoch_spike), savepath=savepath, color = {"bar": (real_color, simu_color)})
     epoch_spike = np.array(epoch_spike)
     epoch_spike = np.sum(epoch_spike, axis=0) / epoch
-    draw_res(epoch_spike, savepath, real_data, interval, trainer.mon["n.V"][warmup * steps:, 0, :])
-
-
-    V = trainer.mon["n.V"][warmup * steps:, 0, :]
-    # V = trainer.mon["n.V"][:, 0, :]
-    fig, ax = plt.subplots()
-    colp = ax.pcolormesh(V, cmap = "RdBu_r")
-    plt.colorbar(colp)
-    ax.set_title("Membrane potential")
-    ax.set_xlabel("Neuron index")
-    ax.set_ylabel("Time (s)")
-    ylabels = ax.get_yticks().tolist()
-    ylabels = (np.array(ylabels) * bm.get_dt()).tolist()
-    ax.set_yticklabels(ylabels)
-    plt.savefig(os.path.join(savepath, "V.png"), dpi = 300)
-    plt.close()
+    
+    return epoch_spike, real_data, trainer.mon["n.V"][warmup * steps:, 0, :]
+    
     
     # bp.checkpoints.save_pytree(os.path.join(savepath, "model.bp"), { 'net': net.state_dict() })
 
@@ -404,7 +415,6 @@ class TaskWithProgressBar:
         self.root = root
         self.args = args
         self.elapsed_time = 0
-        self.dispaly = 1
 
         label = tk.Label(root, text="Simulation in progress...")
         label.pack(pady=5)
@@ -421,6 +431,7 @@ class TaskWithProgressBar:
 
 
     def start_simulation(self):
+        self.display = 1
         self.progressbar.start()
         self.update_time_label()
         self.task_thread = threading.Thread(target=self.run_simu, args=(self.args,))
@@ -428,20 +439,28 @@ class TaskWithProgressBar:
     
     def update_time_label(self):
         self.elapsed_time += 0.1
-        self.time_label.config(text="Elapsed Time: %.2fs" % self.elapsed_time)
-        if self.dispaly:
+        if self.display:
+            self.time_label.config(text="Elapsed Time: %.2fs" % self.elapsed_time)
             self.root.after(100, self.update_time_label)
     
     def run_simu(self, args):
+        # try:
         defult_setting(args["Setting"])
-        running(args)
+        sim, real, v = running(args)
+        self.display = 0
         self.progressbar.stop()
-        self.dispaly = 0
-        self.time_label.config(text="Simulation Completed in %.2fs" % self.elapsed_time)
-        tk.messagebox.showinfo("Message", "Simulation Done!")
         self.root.destroy()
+        draw_res(sim, args["Running"]["savepath"], real, args["Running"]["interval"], v)
+        
+        # self.time_label.config(text="Simulation Completed in %.2fs" % self.elapsed_time)
+        tk.messagebox.showinfo("Message", "Simulation Done!")
+        # except Exception as e:
+        #     self.progressbar.stop()
+        #     self.root.destroy()
+        #     tk.messagebox.showerror("Error", "Runtime error, please select correct parameters or check the running environment")
+        
 
-
+ 
 
 
     

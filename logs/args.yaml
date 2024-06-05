@@ -39,9 +39,9 @@ real_world_data:
   draw_p: false
   loadpath: ./logs/
   mode: fitting
-  response: D:/code/pysim/temp/data/new_data/stim1.1-1.mat
+  response: D:/code/pysim/data/data2/1.1.mat
   savepath: ./logs/outcomes/
-  stTime: 0
+  stTime: 60
   stimulus:
   - 0
   - 0

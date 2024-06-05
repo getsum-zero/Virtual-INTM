@@ -1,15 +1,16 @@
 Running:
-  cons: 2000
+  cons: 500
   during: 10
   epoch: 1
   interval: 2
   savepath: ./logs/
+  warmup: 15
 Setting:
   cuda_devices: 0
   dt: 0.01
   platform: cpu
 planar_topology:
-  N: 2000
+  N: 1500
   cell_prob:
   - 0.85
   - 0.1
@@ -27,39 +28,53 @@ planar_topology:
   draw_point: true
   ele_scale: 0.35
   far_n: 2
-  fire_n: 30000
+  fire_n: 10000
   lateral_inh: 0
   near_p: 0.0008
   savepath: ./logs/outcomes/
   unit: 1
 real_world_data:
+  cutTime: 120
   draw_ori: false
   draw_p: false
   loadpath: ./logs/
   mode: fitting
-  response: D:/code/pysim/data/brain_spike/2.1.mat
+  response: D:/code/pysim/temp/pysim/data/data4/1.1/1.1.mat
   savepath: ./logs/outcomes/
+  stTime: 60
   stimulus:
   - 0
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 0
+  - 1
   - 0
   - 0
   - 0
   - 0
   - 0
   - 0
+  - 1
+  - 1
   - 0
   - 0
   - 0
   - 0
   - 0
   - 0
+  - 1
+  - 1
   - 0
   - 0
   - 0
   - 0
   - 0
   - 0
-  - 0
+  - 1
   - 0
   - 0
   - 0
@@ -83,26 +98,14 @@ real_world_data:
   - 0
   - 0
   - 0
+  - 1
   - 0
-  - 0
-  - 0
-  - 0
-  - 0
-  - 0
-  - 0
-  - 0
-  - 0
-  - 0
-  - 0
-  - 0
-  - 0
-  - 0
-  - 0
-  - 0
-  - 0
-  - 0
-  - 0
-  - 0
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
   - 0
 shape:
   col: 8
