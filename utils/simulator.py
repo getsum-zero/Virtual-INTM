@@ -14,11 +14,8 @@ import tkinter as tk
 import pickle
 import seaborn as sb
 
-from utils.fig import sigle_save
+from utils.fig import sigle_save, draw_res
 # import gif
-
-simu_color = "#608BDF"
-real_color = "#D8D8D8"
 
 
 class SNN(bp.DynamicalSystem):
@@ -87,6 +84,8 @@ def getModel(args):
     synapses_args = args["synapses"]
     neuron_args = args["Neuron"]
 
+    np.random.seed(int(args["Running"]["seed"]))
+
     if real_data_args["mode"] == "fitting":
         real_data = fromRealdata(real_data_args["response"], 
                                 shape = (args["shape"]["row"],args["shape"]["col"]), 
@@ -94,6 +93,7 @@ def getModel(args):
                                 draw_p = real_data_args["draw_p"],
                                 stTime = real_data_args["stTime"],
                                 cutTime = real_data_args["cutTime"],
+                                pseudo_trace = real_data_args["pseudo_trace"],
                                 save_path = real_data_args["savepath"]
         )
         real_data_sp = np.sum(real_data, axis=0)
@@ -138,185 +138,6 @@ def getModel(args):
         return None, topology, net
     else:
         raise("Mode error!")
-
-
-
-def dyn_draw(i, spikes, time, index, x_ticks, prV, r, spikes_, width):
-    plt.subplot(2,3,1)
-    plt.xlim(0, bm.get_dt() * (i+1))
-    plt.ylim(0, spikes.shape[1])
-    plt.scatter(time, index, marker=".", s=8, color =(75/255, 101/255, 175/255))
-    plt.xlabel("Time (s)")
-    plt.ylabel("Neuron index")
-
-    plt.subplot(2,3,2)
-    
-    plt.pcolormesh(prV.T)
-    plt.xlabel("Time ({:.2f}s)".format(bm.get_dt()))
-    plt.ylabel("Neuron index")
-    plt.colorbar()
-
-    plt.subplot(2,3,3)
-    plt.pcolormesh(np.sum(spikes[i:r], axis=0).reshape((8,8)).T, cmap="Blues")
-
-    
-
-    plt.subplot(2,1,2)
-    plt.bar(x_ticks + width/2, spikes_, width = width, label='Framework', color = (75/255, 101/255, 175/255))
-    plt.xlim(0, spikes.shape[1])
-    plt.ylim(0, np.max(spikes_)+1)
-    plt.ylabel("Spike count")
-    plt.xlabel("MEA index")
-    plt.suptitle('Time: {:.2f}s'.format(r * bm.get_dt()), fontsize=15)
-
-    plt.pause(0.0001)
-
-
-# @gif.frame
-# def dyn_draw_gif(i, spikes, time, index, x_ticks, prV, r, spikes_, width):
-#     dyn_draw(i, spikes, time, index, x_ticks, prV, r, spikes_, width)
-
-
-def draw_res(spikes, savepath, real_data, interval, Vmat):
-
-    # bp.visualize.raster_plot(bm.arange(spikes.shape[0]) , spikes, show=False)
-    # plt.savefig(savepath + "spikes.png", dpi = 300)
-    # plt.close()
-
-    if real_data is None:
-        for i in range(0, spikes.shape[0], interval):
-            idex = np.sum(spikes[i:i+interval], axis=0) >= 0.5
-            if interval > 1:
-                spikes[i+1:i+interval] = 0
-            spikes[i] = idex
-        
-        plt.figure(figsize=(10, 6))
-        plt.subplots_adjust(wspace =0.5, hspace = 0.3)
-        plt.ion() 
-        ts = np.arange(spikes.shape[0]) * bm.get_dt()
-        i = 0
-        # frames = []
-        while i < spikes.shape[0]:
-            plt.clf()
-            r = min(int(i + 1 / bm.get_dt() / 4), spikes.shape[0])
-            if np.sum(spikes[i:r])  < 15:
-                i = r
-            elements = np.where(spikes[:i+1] > 0.)
-            index = elements[1]
-            time = ts[elements[0]]
-            prV = Vmat[:i]
-
-            x_ticks = np.arange(0, spikes.shape[1])
-            spikes_ = np.sum(spikes[:r], axis=0).reshape(-1)
-            width = 0.4
-
-            # frames.append(dyn_draw_gif(i, spikes, time, index, x_ticks, prV, r, spikes_, width))
-            dyn_draw(i, spikes, time, index, x_ticks, prV, r, spikes_, width)
-            i = min(i + 10, spikes.shape[0])
-
-        plt.ioff()
-        plt.show()
-        plt.close()
-
-        # gif.save(frames, os.path.join(savepath, "res.gif"), duration=1000)
-        # plt.savefig(os.path.join(savepath, "outcomes_sim.png"), dpi = 300)
-    
-    else:
-
-        V = Vmat
-        # V = trainer.mon["n.V"][:, 0, :]
-        fig, ax = plt.subplots()
-        colp = ax.pcolormesh(V, )#cmap = "RdBu_r")
-        plt.colorbar(colp)
-        ax.set_title("Membrane potential")
-        ax.set_xlabel("Neuron index")
-        ax.set_ylabel("Time (s)")
-        ylabels = ax.get_yticks().tolist()
-        ylabels = (np.array(ylabels) * bm.get_dt()).tolist()
-        ax.set_yticklabels(ylabels)
-        plt.savefig(os.path.join(savepath, "V.png"), dpi = 300)
-        plt.close()
-        # fig, ax = plt.subplots()
-        # colp = ax.pcolormesh(V)
-        # plt.colorbar(colp)
-        # ax.set_title("Membrane potential")
-        # ax.set_xlabel("Neuron index")
-        # ax.set_ylabel("Time (s)")
-        # ylabels = ax.get_yticks().tolist()
-        # ylabels = (np.array(ylabels) * bm.get_dt()).tolist()
-        # ax.set_yticklabels(ylabels)
-        # plt.savefig(os.path.join(savepath, "V.png"), dpi = 300)
-        # plt.close()
-
-
-        real_data = np.sum(real_data, axis=0) / np.sum(real_data)
-        spikes = np.sum(spikes, axis=0) / np.sum(spikes)
-
-
-        plt.figure(figsize=(10, 6))
-        plt.subplots_adjust(wspace =0.5, hspace = 0.3)
-        plt.subplot(2,3,1)
-        sb.heatmap(real_data.reshape((8,8)),  cmap="Blues", cbar_kws={'label': 'Normalized fire rate',})
-        plt.title("Real-world")
-        plt.xlabel("Electrodes Col")
-        plt.ylabel("Electrodes Row")
-        plt.xticks([])
-        plt.yticks([])
-
-        # loc = [0, times / 2, times]
-        # lab = [0, spikes.shape[0] * bm.get_dt() / 2, spikes.shape[0] * bm.get_dt()]
-        # locy = np.arange(spikes.shape[1] // 8) * 8
-        # plt.xticks(loc, lab)
-        # plt.yticks(locy, locy)
-
-
-
-        plt.subplot(2,3,2)
-        sb.heatmap(spikes.reshape((8,8)), cmap="Blues", cbar_kws={'label': 'Normalized fire rate', })
-        plt.title("Framework")
-        plt.xlabel("Electrodes Col")
-        plt.ylabel("Electrodes Row")
-        plt.xticks([])
-        plt.yticks([])
-
-
-        plt.subplot(2,3,3)
-        real_data = real_data / np.sum(real_data)
-        spikes = spikes / np.sum(spikes)
-        cum_real_data = np.cumsum(real_data)
-        cum_spikes = np.cumsum(spikes)
-
-        l = np.arange(cum_real_data.shape[0])
-        plt.plot(l, cum_real_data, label='Real-world')
-        plt.plot(l, cum_spikes, label='Framework')
-        plt.legend()
-
-
-        plt.subplot(2,1,2)
-        real_data = real_data.reshape(-1)
-        spikes = spikes.reshape(-1)
-        x_ticks = np.arange(0, spikes.shape[0])
-        width = 0.6
-        plt.bar(x_ticks, spikes, width = width, label='Framework',  edgecolor='white', color = simu_color)
-        plt.bar(x_ticks, -real_data, width = width, label='Real-world', edgecolor='white', color = real_color)
-        # for x, y in zip(x_ticks, real_data):
-        #     plt.text(x + 0.4, y + 0.05, '%.2f' % y, ha='center', va='bottom')
-        plt.ylabel("Normalized fire rate")
-        plt.xlabel("MEA index")
-        plt.legend()
-        maxx = max(np.max(real_data), np.max(spikes)) / 4
-        idx = (np.arange(9) - 4) * maxx
-        ytext = ['%.2f' % x for x in np.abs(idx)]
-        plt.yticks(idx, ytext)
-
-        # plt.subplot(1,4,4)
-        # plt.plot(np.arange(64), real_data.reshape(-1), label = "Real-world")
-        # plt.plot(np.arange(64), spikes.reshape(-1), label = "Framework")
-        
-        plt.savefig(os.path.join(savepath, "outcomes.png"), dpi = 300)
-        plt.show()
-        plt.close()
-
 
 
 
@@ -380,12 +201,12 @@ def running(args):
         pickle.dump(topology, file)
     print("Saving Topology into!" + os.path.join(savepath, "topology.yaml"))  
 
-    sigle_save(real_data, np.array(epoch_spike), savepath=savepath, color = {"bar": (real_color, simu_color)})
+    sigle_save(real_data, np.array(epoch_spike), savepath=savepath, vis_args=args["Visual"])
     epoch_spike = np.array(epoch_spike)
     epoch_spike = np.sum(epoch_spike, axis=0) / epoch
     
-    return epoch_spike, real_data, trainer.mon["n.V"][warmup * steps:, 0, :]
-    
+    return epoch_spike, real_data, trainer.mon["n.V"][:, 0, :]
+    # warmup * steps
     
     # bp.checkpoints.save_pytree(os.path.join(savepath, "model.bp"), { 'net': net.state_dict() })
 
@@ -450,7 +271,7 @@ class TaskWithProgressBar:
         self.display = 0
         self.progressbar.stop()
         self.root.destroy()
-        draw_res(sim, args["Running"]["savepath"], real, args["Running"]["interval"], v)
+        draw_res(sim, args["Running"]["savepath"], real, args["Running"]["interval"], v, args["Visual"])
         
         # self.time_label.config(text="Simulation Completed in %.2fs" % self.elapsed_time)
         tk.messagebox.showinfo("Message", "Simulation Done!")

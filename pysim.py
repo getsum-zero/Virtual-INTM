@@ -25,8 +25,9 @@ args = {
         "response" : None, 
         "draw_ori": False,              
         "draw_p": False, 
-        "stTime": 60,
-        "cutTime": 120,
+        "stTime": 70,
+        "cutTime": 10,
+        "pseudo_trace": 0.2,
         "savepath": "./logs/outcomes/",
         "loadpath": "./logs/",
     },
@@ -88,14 +89,24 @@ args = {
         "during": "10",
         "epoch": "1",
         "interval": "2", 
+        "seed": "1234",
     },
     "Neuron":{  
-        "Izhikevich":{
-            "a": 0.02,
-            "b": 0.25,
-            "c": -55,
-            "d": 0.05
-        }
+        # "Izhikevich":{
+        #     "a": 0.02,
+        #     "b": 0.25,
+        #     "c": -55,
+        #     "d": 0.05
+        # }
+    },
+    "Visual":{
+        "bar":{
+            "simu_color": "#608BDF",
+            "real_color": "#D8D8D8"
+        },
+        "font": "Arial",
+        
+
     }
 }
 
@@ -203,4 +214,4 @@ if __name__ == '__main__':
 '''
 todo:
     检查何处非法
-'''    
+'''

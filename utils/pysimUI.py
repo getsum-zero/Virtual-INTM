@@ -477,7 +477,12 @@ class SimUI():
                     yaml.dump(self.args, file)
                 # shutil.move(os.path.join(self.args["Running"]["savepath"] , "model.bp"), os.path.join(file_path, "model.bp"))
                 shutil.move(os.path.join(self.args["Running"]["savepath"] , "topology.pkl"), os.path.join(file_path, "topology.pkl"))
-                shutil.move(self.args["Running"]["savepath"], os.path.join(file_path, "outputs"))
+                outputs_tar = os.path.join(file_path, "outputs")
+                if os.path.exists(outputs_tar):
+                    if len(os.listdir(outputs_tar)) == 0:
+                        os.rmdir(outputs_tar)
+                    else:  shutil.rmtree(outputs_tar)
+                shutil.move(self.args["Running"]["savepath"], outputs_tar)
 
                 tk.messagebox.showinfo(title='', message="Saved successfully")
             except Exception as e:
@@ -569,33 +574,21 @@ class SimUI():
                 stimulus_button = ttk.Checkbutton(self.StimuContainer, variable=self.var_list[i], 
                                                     onvalue=1, offvalue=0, bootstyle="SECONDARY")
                 stimulus_button.grid(row=i//self.simusCol, rowspan=1, column=(i%self.simusCol), columnspan = 1, pady=5,padx=5)
-
-
-
-
-    def adjust_w(self, event):
-        val = event.widget.get()
-        if val == "BioNMDA" or val == "NMDA":
-            self.args["synapses"]["w_bound"] = 10
-            self.w_bound.set("10")
-            self.master.update()
     
     def CoreGenerator(self):
         
-        def create(label, var, values, change = False):
+        def create(label, var, values):
             container = ttk.Frame(self.CoreFrame)
             container.pack(fill=X, expand=YES, pady=5)
 
             lbl = ttk.Label(master=container, text=label.title(), width=12)
             lbl.pack(side=LEFT, padx=5, anchor='w')
             combobox = ttk.Combobox(master=container, state='readonly', textvariable=var, values=values)
-            if change:
-                combobox.bind('<<ComboboxSelected>>', lambda event: self.adjust_w(event))
             combobox.pack(side=RIGHT, padx=5, anchor='e')
 
 
         create("Neuron type", self.value_n, ['Izhikevich', 'GIF', 'LIF'])
-        create("Synapses type", self.value_s, ['AMPA', 'NMDA', 'BioNMDA'], change = True)
+        create("Synapses type", self.value_s, ['AMPA', 'NMDA', 'BioNMDA'])
         create("Plasticity type", self.value_p, ['STDP',])
 
         container = ttk.Frame(self.CoreFrame)
@@ -613,7 +606,7 @@ class SimUI():
         container.pack(fill=X, expand=YES, pady=5)
         lbl = ttk.Label(master=container, text="Platform")
         lbl.pack(side=LEFT, padx=5, anchor='w', expand=True)
-        combobox = ttk.Combobox(master=container, state='readonly', textvariable=self.pal, values=['cpu', 'gpu',], width=8)
+        combobox = ttk.Combobox(master=container, state='readonly', textvariable=self.pal, values=['cpu', 'gpu', 'PAIcore'], width=8)
         combobox.pack(side=LEFT, padx=5, anchor='w', expand=True)
 
         lbl = ttk.Label(master=container, text="Frequency (Hz)")

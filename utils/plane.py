@@ -32,12 +32,21 @@ ele_color = "#D8D8D8"
 neur_trans_color = "#608BDF"
 neur_color = "#F7E1ED"
 
+def dele_pseudo_trace(spikes, pseudo_trace = 0.2):
+    steps = int(1 / bm.get_dt())
+    hop = int(pseudo_trace / bm.get_dt())
+    for i in range(0, spikes.shape[0], steps):
+        spikes[i:i+hop] = 0
+    return spikes
+
+
 def fromRealdata(path, shape, 
                  draw_ori = False, 
                  draw_p = False,
                  save_path = "./log/",
                  stTime = 0,
                  cutTime = 10,
+                 pseudo_trace = 0.75
                  ):
     #record = h5py.File(path)
     record = scio.loadmat(path)
@@ -62,19 +71,25 @@ def fromRealdata(path, shape,
             pos = (pos // 10 - 1) * 8 + pos % 10 - 1
             data = np.unique(np.round(data / dt)).astype(np.int32)
             spikes[data[data <= total], pos] = 1
-        print(np.sum(spikes))
         assert np.sum(spikes) > 0
     except:    
-        for key, val in record.items():
-            if key[-2:] != "nr": continue
-            if key[19:21].isdigit() == False:  continue 
-            data = np.array(val)
-            pos = int(key[19:21]) #AnSt_Label_E_00159_
-            pos = (pos // 10 - 1) * 8 + pos % 10 - 1
-            data = np.unique(np.round(data / dt)).astype(np.int32)
-            spikes[data[data <= total], pos] = 1
+        try:
+            for key, val in record.items():
+                if key[-2:] != "nr": continue
+                if key[19:21].isdigit() == False:  continue 
+                data = np.array(val)
+                pos = int(key[19:21]) #AnSt_Label_E_00159_
+                pos = (pos // 10 - 1) * 8 + pos % 10 - 1
+                data = np.unique(np.round(data / dt)).astype(np.int32)
+                spikes[data[data <= total], pos] = 1
+            assert np.sum(spikes) > 0
+        except:
+            raise("Data file format error")
         
     spikes = spikes[stTime:cutTime+stTime]
+    print(np.sum(spikes, axis=0))
+    spikes = dele_pseudo_trace(spikes, pseudo_trace)
+    bp.visualize.raster_plot(bm.arange(cutTime), spikes, show=True)
 
     p = np.sum(spikes, axis=0)
     p = p / np.sum(p)
