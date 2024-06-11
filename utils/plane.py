@@ -25,7 +25,6 @@ find method:
     step:
         1. the probability density determines which grid the data belongs to
         2. coordinates of random generated points (within the grid)
-
 '''
 
 ele_color = "#D8D8D8"

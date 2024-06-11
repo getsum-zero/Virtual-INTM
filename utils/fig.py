@@ -153,6 +153,8 @@ def sigle_save(real_data_o, spikes_o, savepath, vis_args):
 
     # spike
     steps = int(1/bm.get_dt())
+    # sim_len = int(minlen / 10)
+    # bp.visualize.raster_plot(bm.arange(sim_len * steps) / steps, spikes_o[0, :sim_len], show=False, xlabel='Time (s)', ylabel="Electrodes", title='Framework')
     bp.visualize.raster_plot(bm.arange(minlen * steps) / steps, spikes_o[0, :minlen], show=False, xlabel='Time (s)', ylabel="Electrodes", title='Framework')
     plt.savefig(os.path.join(savepath, "sim_spikes.png"), dpi = 300)
     plt.close()
