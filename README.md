@@ -34,8 +34,7 @@ run `pysim.exe`:
     * Click the `Run` button at the top of the interface
     * We can get the results in logs/outputs:
 <div align="center">
-	<img src="./img/real_heatmap.png" alt="image-real_heatmap" width="400">
-    <img src="./img/frame_heatmap.png" alt="image-frame_heatmap" width="400">
+	<img src="./img/real_heatmap.png" alt="image-real_heatmap" width="400"> <img src="./img/frame_heatmap.png" alt="image-frame_heatmap" width="400">
 </div> 
 
 
