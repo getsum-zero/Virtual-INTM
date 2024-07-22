@@ -20,7 +20,7 @@ run `pysim.exe`:
 * On the initial screen, enter the MEA size (default 8 x 8)
 
 <div align="center">
-	<img src="./img/input.png" alt="image-input" width="500">
+	<img src="./img/input.png" alt="image-input" width="200">
 </div>
 
 
