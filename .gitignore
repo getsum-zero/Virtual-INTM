@@ -1,9 +1,8 @@
 .vscode
 __*
-data
 *.bp
 temp
-data
+data_
 build
 *.spec
 *.exe

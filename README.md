@@ -13,21 +13,32 @@ Pyinstaller -F -w pysim.py 				# Packaging without console
 Pyinstaller -F -w -i XXX.ico pysim.py 	# Pack and specify exe icon packaging
 ```
 
-### Usage
+### Quick Use
 
 run `pysim.exe`:
 
 * On the initial screen, enter the MEA size (default 8 x 8)
 
 <div align="center">
-	<img src="./img/input.png" alt="image-input" width="200">
+	<img src="./img/input.png" alt="image-input" width="400">
 </div>
 
+* We can get the following main interface:
+<div align="center">
+	<img src="./img/main.png" alt="image-main" width="300">
+</div>
 
-* 提交后进入主界面；点击 `Select a Mode` / `Simulation`，选择 `egs/`文件夹，点击运行即可
+* Digital Twin Model:
+    * Clik `Digital Twin Model` and choose `data/2.1.1/2.1.1.mat`
+    * Clik `Preset` and choose `data/2.1.1/args.yaml`
+    * Click the `Ru`n button at the top of the interface
+    * We can get the results in logs/outputs:
+<div align="center">
+	<img src="./img/real_heatmap.png" alt="image-real_heatmap" width="200">
+    <img src="./img/frame_heatmap.png" alt="image-frame_heatmap" width="200">
+</div> 
 
-  <img src="./img/main.png" alt="image-20240408172836239" style="zoom:20%;" />
-  
+
 * 结果：
 
   <img src="./img/fitting.png" alt="image-20240411223200113" style="zoom:50%;" /><img src="./img/res.gif" alt="res" style="zoom:40%;" />
