@@ -2,26 +2,27 @@
 * The UI design of this project is based on Tkinter / [ttkbootstrap][1]
 * The core module of this project is based on [brainpy][2]
 
-### 打包
 
-执行指令
 
+### Packaging
+* Make sure you have the correct python environment
+* Execute instructions
 ```shell
-Pyinstaller -F pysim.py   				# 打包exe
-Pyinstaller -F -w pysim.py 				# 不带控制台的打包
-Pyinstaller -F -w -i XXX.ico pysim.py 	# 打包指定exe图标打包
+Pyinstaller -F pysim.py   				# or
+Pyinstaller -F -w pysim.py 				# Packaging without console
+Pyinstaller -F -w -i XXX.ico pysim.py 	# Pack and specify exe icon packaging
 ```
 
-### 使用
+### Usage
 
-执行 `pysim.exe` ：
+run `pysim.exe`:
 
-* 进入初始界面，输入MEA尺寸（默认8 x 8​​ ）
+* On the initial screen, enter the MEA size (default 8 x 8)
 
-  <details>
-  <summary>初始界面</summary>
-  <img src="./img/input.png" alt="image-input" style="zoom:70%;" />
-  </details>
+<div align="center">
+	<img src="./img/input.png" alt="image-input" width="500">
+</div>
+
 
 * 提交后进入主界面；点击 `Select a Mode` / `Simulation`，选择 `egs/`文件夹，点击运行即可
 
