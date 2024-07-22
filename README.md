@@ -20,7 +20,7 @@ run `pysim.exe`:
 * On the initial screen, enter the MEA size (default 8 x 8)
 
 <div align="center">
-	<img src="./img/input.png" alt="image-input" width="400">
+	<img src="./img/input.png" alt="image-input" width="300">
 </div>
 
 * We can get the following main interface:
@@ -31,11 +31,11 @@ run `pysim.exe`:
 * Digital Twin Model:
     * Clik `Digital Twin Model` and choose `data/2.1.1/2.1.1.mat`
     * Clik `Preset` and choose `data/2.1.1/args.yaml`
-    * Click the `Ru`n button at the top of the interface
+    * Click the `Run` button at the top of the interface
     * We can get the results in logs/outputs:
 <div align="center">
-	<img src="./img/real_heatmap.png" alt="image-real_heatmap" width="200">
-    <img src="./img/frame_heatmap.png" alt="image-frame_heatmap" width="200">
+	<img src="./img/real_heatmap.png" alt="image-real_heatmap" width="400">
+    <img src="./img/frame_heatmap.png" alt="image-frame_heatmap" width="400">
 </div> 
 
 
