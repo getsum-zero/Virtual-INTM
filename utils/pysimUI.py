@@ -21,8 +21,8 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 style = SECONDARY
 style_p = 'secondary.TFrame'
-color_ele = "#ADB5BD"
-color_cell = "#E7EFFA"
+color_ele = "#4582ec"
+color_cell = "#CBEADC"
 
 def list2str(l):
     if isinstance(l,str):  return l
@@ -130,7 +130,7 @@ class SimUI():
    
     def init_var(self):
         self.option = tk.IntVar(value=2)
-        self.filetext = tk.StringVar(value="Choose the path of real-world data (end with \".mat\")")
+        self.filetext = tk.StringVar(value="Choose the path of real-world data")
         self.configtext = tk.StringVar(value="Choose the path of saved configuration")
         self.var_list = [tk.IntVar(value=0) for _ in range(self.inshape)]
 
@@ -156,9 +156,9 @@ class SimUI():
         self.canvas.create_oval(self.center_x-r, self.center_y-r, self.center_x+r, self.center_y+r, fill=color_ele, tags="ele")
         self.canvas.create_oval(self.center_x-r0, self.center_y-r0, self.center_x+r0, self.center_y+r0, fill=color_cell, tags="cell")
         self.canvas.create_rectangle(self.hspacing, self.hspacing * 9, self.hspacing * 3 , self.hspacing * 9.9, fill=color_ele)
-        self.canvas.create_text(self.hspacing * 6, self.hspacing * 9.45, text="electrodes", fill="black")
+        self.canvas.create_text(self.hspacing * 6, self.hspacing * 9.45, text="Electrode", fill="black")
         self.canvas.create_rectangle(self.hspacing, self.hspacing * 10.1, self.hspacing * 3 , self.hspacing * 11, fill=color_cell)
-        self.canvas.create_text(self.hspacing * 6, self.hspacing * 10.55, text="cell", fill="black")
+        self.canvas.create_text(self.hspacing * 6, self.hspacing * 10.55, text="Neuron", fill="black")
 
         self.cell_scale = tk.StringVar(value= "1, 3, 5, 7")
         self.cell_prob = tk.StringVar(value = "0.85, 0.1, 0.04, 0.01")
@@ -186,11 +186,12 @@ class SimUI():
         self.warmup = tk.StringVar(value = "10")
         self.stTime = tk.StringVar(value = "0")
         self.cutTime = tk.StringVar(value = "10")
+        self.timescale = tk.StringVar(value = "1.0")
 
     def args2var(self):
         if self.args["real_world_data"]["mode"] == None:
             self.option.set(2)
-            self.filetext.set("Choose the path of real-world data (end with \".mat\")")
+            self.filetext.set("Choose the path of real-world data")
             self.configtext.set("Choose the path of saved configuration")
             if hasattr(self, 'file_label') and hasattr(self, 'config_label'):
                 self.file_label.config(bootstyle="default")
@@ -206,7 +207,7 @@ class SimUI():
         else: 
             self.option.set(1)
             self.configtext.set(self.args["real_world_data"]["loadpath"])
-            self.filetext.set("Choose the path of real-world data (end with \".mat\")")
+            self.filetext.set("Choose the path of real-world data")
             if hasattr(self, 'file_label') and hasattr(self, 'config_label'):
                 self.file_label.config(bootstyle="default")
                 self.config_label.config(bootstyle="success")
@@ -266,6 +267,7 @@ class SimUI():
         self.warmup.set(str(self.args["Running"]["warmup"]))
         self.stTime.set(str(self.args["real_world_data"]["stTime"]))
         self.cutTime.set(str(self.args["real_world_data"]["cutTime"]))
+        self.timescale.set(str(self.args["Setting"]["timescale"]))
 
 
     def var2args(self):
@@ -313,6 +315,7 @@ class SimUI():
 
         self.args["real_world_data"]["stTime"] = self.stTime.get()
         self.args["real_world_data"]["cutTime"] = self.cutTime.get()
+        self.args["Setting"]["timescale"] = self.timescale.get()
 
     def check_entry(self, x, type):
         if type == "digit":
@@ -372,7 +375,7 @@ class SimUI():
 
         def load_args():
             file_path = filedialog.askopenfilename(title="Open", initialdir = "./",
-                            filetypes=[("mat files", "*.yaml")])
+                            filetypes=[("yaml files", "*.yaml")])
             if file_path:
                 args = copy.deepcopy(self.args)
                 response = self.args["real_world_data"]["response"]
@@ -391,10 +394,12 @@ class SimUI():
                     self.args = args
                     tk.messagebox.showerror("Error", "Configuration file error")
 
-
-        
-
-                
+        def comp_file():
+            file_path = filedialog.askopenfilename(title="Open", initialdir = "./",
+                            filetypes=[("mat files", "*.mat")])
+            if file_path:
+                self.args["real_world_data"]["backward"] = file_path
+  
 
         def select_folder():
             file_path = filedialog.askdirectory(title ="Select a folder", 
@@ -429,11 +434,11 @@ class SimUI():
         container = ttk.Frame(self.ModeFrame)
         container.pack(fill=X, expand=YES, pady=5)
         self.file_button = ttk.Radiobutton(container, variable=self.option, value=0,
-                                    text="Fitting       ", 
+                                    text="Digital Twin Model", 
                                     bootstyle="success",
                                     command=lambda: select_file())
         self.file_button.pack(side=LEFT, padx=10)
-        self.file_label = ttk.Entry(container, textvariable=self.filetext, state="readonly", width=50)
+        self.file_label = ttk.Entry(container, textvariable=self.filetext, state="readonly", width=35)
         self.file_label.pack(side=LEFT, padx=5, fill=X,) #expand=YES,)
 
         load = ttk.Button(container, text='Preset', command=load_args, bootstyle=style,
@@ -444,12 +449,16 @@ class SimUI():
         container = ttk.Frame(self.ModeFrame)
         container.pack(fill=X, expand=YES, pady=5)
         self.config_button = ttk.Radiobutton(container, variable=self.option, value=1,
-                                    text="Simulation", 
+                                    text="Virtual Experiment ", 
                                     bootstyle="success",
                                     command=lambda: select_folder())
         self.config_button.pack(side=LEFT, padx=10)
-        self.config_label = ttk.Entry(container, textvariable=self.configtext, state="readonly", width=45)
-        self.config_label.pack(side=LEFT, padx=5, fill=X, expand=YES,)
+        self.config_label = ttk.Entry(container, textvariable=self.configtext, state="readonly", width=35)
+        self.config_label.pack(side=LEFT, padx=5, fill=X,)# expand=YES,)
+        load = ttk.Button(container, text='Comp', command=comp_file, bootstyle=style,
+                         image='new',  compound=LEFT,  width=5, )
+        load.pack(side=RIGHT, padx=5, ipadx=5, ipady=5, fill=X,)
+
 
     def ButtonGenerator(self):
 
@@ -581,9 +590,10 @@ class SimUI():
             container = ttk.Frame(self.CoreFrame)
             container.pack(fill=X, expand=YES, pady=5)
 
-            lbl = ttk.Label(master=container, text=label.title(), width=12)
+            lbl = ttk.Label(master=container, text=label.title(), width=15)
             lbl.pack(side=LEFT, padx=5, anchor='w')
-            combobox = ttk.Combobox(master=container, state='readonly', textvariable=var, values=values)
+            combobox = ttk.Combobox(master=container, state='readonly', width=15,
+                                    textvariable=var, values=values)
             combobox.pack(side=RIGHT, padx=5, anchor='e')
 
 
@@ -597,19 +607,20 @@ class SimUI():
         lbl.pack(side=LEFT, padx=5, anchor='w')
 
         check_s = container.register(lambda P: self.check_entry(P, "digit"))
-        ent = ttk.Entry(master=container, textvariable=self.num_sy, validate="focus", validatecommand=(check_s, '%P'),  justify="center",)
+        ent = ttk.Entry(master=container, textvariable=self.num_sy,  width=15,
+                        validate="focus", validatecommand=(check_s, '%P'),  justify="center",)
         ent.pack(side=RIGHT, padx=5, expand=YES, anchor='e')
 
     def RunGenerator(self):
 
         container = ttk.Frame(self.RunFrame)
         container.pack(fill=X, expand=YES, pady=5)
-        lbl = ttk.Label(master=container, text="Platform")
+        lbl = ttk.Label(master=container, text="Device")
         lbl.pack(side=LEFT, padx=5, anchor='w', expand=True)
         combobox = ttk.Combobox(master=container, state='readonly', textvariable=self.pal, values=['cpu', 'gpu', 'PAIcore'], width=8)
         combobox.pack(side=LEFT, padx=5, anchor='w', expand=True)
 
-        lbl = ttk.Label(master=container, text="Frequency (Hz)")
+        lbl = ttk.Label(master=container, text="Freq(Hz)")
         lbl.pack(side=LEFT, padx=5, anchor='e', expand=True)
         check_s = container.register(lambda P: self.check_entry(P, "float"))
         ent = ttk.Entry(master=container, textvariable=self.dt, validate="focus", validatecommand=(check_s, '%P'), width=8,  justify="center",)
@@ -617,33 +628,35 @@ class SimUI():
 
         container = ttk.Frame(self.RunFrame)
         container.pack(fill=X, expand=YES, pady=5)
-        lbl = ttk.Label(master=container, text="Stimulus (mV)")
+        lbl = ttk.Label(master=container, text="Stimu(mV)")
         lbl.pack(side=LEFT, padx=5, anchor='w', expand=True)
         check_s = container.register(lambda P: self.check_entry(P, "float"))
         ent = ttk.Entry(master=container, textvariable=self.cons, validate="focus", validatecommand=(check_s, '%P'), width=8, justify="center",)
         ent.pack(side=LEFT, padx=5, expand=YES, anchor='w')
 
-        lbl = ttk.Label(master=container, text="Time (s)")
+        lbl = ttk.Label(master=container, text="Time(s)")
         lbl.pack(side=LEFT, padx=5, anchor='e', expand=True)
         check_s = container.register(lambda P: self.check_entry(P, "float"))
         ent = ttk.Entry(master=container, textvariable=self.T, validate="focus", validatecommand=(check_s, '%P'), width=8, justify="center",)
         ent.pack(side=LEFT, padx=5, expand=YES, anchor='e')
 
     def TopoGenerator(self):
+        w = 25
+        wen = 15
         def create(text, var, type):
             container = ttk.Frame(self.TopoFrame)
             container.pack(fill=X, expand=YES, pady=5)
-            lbl = ttk.Label(master=container, text=text)
+            lbl = ttk.Label(master=container, text=text, width=w)
             lbl.pack(side=LEFT, padx=5, anchor='w', expand=True)
 
             check_s = container.register(lambda P: self.check_entry(P, type))
             ent = ttk.Entry(master=container, textvariable=var, validate="focus", validatecommand=(check_s, '%P'), 
-                            width=20,  justify="center",)
+                            width=wen,  justify="center",)
             ent.pack(side=LEFT, padx=5, expand=YES, anchor='e')
         
-        create("The number of neurons", self.N, "digit")
-        create("The distance between electrodes", self.unit, "float")
-        create("The size of electrodes", self.ele_scale, "float")
+        create("Number of neurons", self.N, "digit")
+        create("Distance between electrodes", self.unit, "float")
+        create("Size of electrodes", self.ele_scale, "float")
 
 
 
@@ -654,7 +667,7 @@ class SimUI():
 
         container = ttk.Frame(self.TopoFrame)
         container.pack(fill=X, expand=YES, pady=5)
-        lbl = ttk.Label(master=container, text="Relative sizes of cells and electrodes")
+        lbl = ttk.Label(master=container, text="Relative sizes", width=w)
         lbl.pack(side=LEFT, padx=5, anchor='w', expand=True)
         self.scale = ttk.Scale(container, from_=0, to=10000, orient="horizontal", variable=self.scale_var, style=style,
                                command=lambda value: update_circle_size(value, self.canvas, self.center_x, self.center_y, ))
@@ -679,27 +692,15 @@ class SimUI():
                 ent.pack(side=LEFT, padx=5, expand=YES, anchor=alig)
                 iter = iter + 1
 
-        labelWidth = 14
+        labelWidth = 16
         packwidth = 20
 
         container = ttk.Frame(self.DefuaFrame)
         container.pack(fill=X, expand=YES, pady=5)
-        lbl = ttk.Label(master=container, text="Cell scales", width=labelWidth)
+        lbl = ttk.Label(master=container, text="Neuron scales", width=labelWidth)
         lbl.pack(side=LEFT, padx=5, anchor='w', expand=True)
         check_s = container.register(lambda P: self.check_entry(P, "list"))
         ent = ttk.Entry(master=container, textvariable=self.cell_scale, validate="focus", 
-                        validatecommand=(check_s, '%P'), width=packwidth, justify="center",)
-        ent.pack(side=LEFT, padx=5, expand=YES, anchor='w')
-
-
-       
-
-        container = ttk.Frame(self.DefuaFrame)
-        container.pack(fill=X, expand=YES, pady=5)
-        lbl = ttk.Label(master=container, text="Multiple delays",  width=labelWidth)
-        lbl.pack(side=LEFT, padx=5, anchor='w', expand=True)
-        check_s = container.register(lambda P: self.check_entry(P, "list"))
-        ent = ttk.Entry(master=container, textvariable=self.multiple, validate="focus", 
                         validatecommand=(check_s, '%P'), width=packwidth, justify="center",)
         ent.pack(side=LEFT, padx=5, expand=YES, anchor='w')
 
@@ -712,6 +713,24 @@ class SimUI():
         check_s = container.register(lambda P: self.check_entry(P, "list"))
         ent = ttk.Entry(master=container, textvariable=self.cell_prob, validate="focus", 
                         validatecommand=(check_s, '%P'), width=packwidth, justify="center",)
+        ent.pack(side=LEFT, padx=5, expand=YES, anchor='w')
+
+
+        container = ttk.Frame(self.DefuaFrame)
+        container.pack(fill=X, expand=YES, pady=5)
+        lbl = ttk.Label(master=container, text="Delays",  width=labelWidth // 2)
+        lbl.pack(side=LEFT, padx=5, anchor='w', expand=True)
+        check_s = container.register(lambda P: self.check_entry(P, "list"))
+        ent = ttk.Entry(master=container, textvariable=self.multiple, validate="focus", 
+                        validatecommand=(check_s, '%P'), width=packwidth // 3, justify="center",)
+        ent.pack(side=LEFT, padx=5, expand=YES, anchor='w')
+
+        container.pack(fill=X, expand=YES, pady=5)
+        lbl = ttk.Label(master=container, text="Timescale", width=labelWidth // 2)
+        lbl.pack(side=LEFT, padx=5, anchor='w', expand=True)
+        check_s = container.register(lambda P: self.check_entry(P, "float"))
+        ent = ttk.Entry(master=container, textvariable=self.timescale, validate="focus", 
+                        validatecommand=(check_s, '%P'), width=packwidth // 3, justify="center",)
         ent.pack(side=LEFT, padx=5, expand=YES, anchor='w')
 
 

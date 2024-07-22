@@ -9,6 +9,7 @@ import brainpy.math as bm
 
 simu_color = "#608BDF"
 real_color = "#D8D8D8"
+color_heatmap = "Greens"  # "Blues"
 
 def heatmap_with_time(savepath, real_data, spikes, times):
     print(spikes.shape)
@@ -82,7 +83,7 @@ def heatmap_with_time(savepath, real_data, spikes, times):
     # plt.plot(np.arange(64), real_data.reshape(-1), label = "Real-world")
     # plt.plot(np.arange(64), spikes.reshape(-1), label = "Framework")
     
-    plt.savefig(os.path.join(savepath, "outcomes.png"), dpi = 300)
+    # plt.savefig(os.path.join(savepath, "outcomes.png"), dpi = 300)
     plt.show()
     plt.close()
 
@@ -134,92 +135,117 @@ def Marginal_Histogram(data, dt, name, path):  # 0, 1  (Time, MEA_index)
     plt.close()
 
 
+# Virtual Experiment
+def sigle_save(real_data_o, spikes_o, savepath, vis_args, name = "Digital Twin Model"):
 
-def sigle_save(real_data_o, spikes_o, savepath, vis_args):
 
     font = vis_args["font"]
     color_bar = vis_args["bar"]
 
     plt.rcParams['font.sans-serif'] = font
 
+    spikes_trains = spikes_o.copy()
+    # spike
+    steps = int(1/bm.get_dt())
+    plt.figure(figsize=(10,3))
+    # sim_len = int(minlen / 10)
+    # bp.visualize.raster_plot(bm.arange(sim_len * steps) / steps, spikes_o[0, :sim_len], show=False, xlabel='Time (s)', ylabel="Electrodes", title='Framework')
+    bp.visualize.raster_plot(bm.arange(spikes_o.shape[1] * steps) / steps, spikes_o[0], show=False, 
+                             xlabel='Time (s)', ylabel="Electrodes", title=name)
+    plt.savefig(os.path.join(savepath, "sim_spikes.png"), dpi = 300, pad_inches = 0.0, bbox_inches='tight')
+    # plt.savefig(os.path.join(savepath, "sim_spikes.svg"), format='svg', dpi = 300, pad_inches = 0.0, bbox_inches = 'tight')
+    plt.clf()
+    plt.close()
+
 
     if real_data_o is None:
         return 
-    
     real_spikes = real_data_o.copy()
-    spikes_trains = spikes_o.copy()
-
-    minlen = min(real_data_o.shape[0], spikes_o.shape[1])
-
-    # spike
+    
+    plt.figure(figsize=(10,3))
     steps = int(1/bm.get_dt())
-    # sim_len = int(minlen / 10)
-    # bp.visualize.raster_plot(bm.arange(sim_len * steps) / steps, spikes_o[0, :sim_len], show=False, xlabel='Time (s)', ylabel="Electrodes", title='Framework')
-    bp.visualize.raster_plot(bm.arange(minlen * steps) / steps, spikes_o[0, :minlen], show=False, xlabel='Time (s)', ylabel="Electrodes", title='Framework')
-    plt.savefig(os.path.join(savepath, "sim_spikes.png"), dpi = 300)
-    plt.close()
-
-    steps = int(1/bm.get_dt())
-    bp.visualize.raster_plot(bm.arange(minlen * steps) / steps, real_data_o[:minlen], show=False, xlabel='Time (s)', ylabel="Electrodes", title='Real-world')
-    plt.savefig(os.path.join(savepath, "real_spikes.png"), dpi = 300)
+    bp.visualize.raster_plot(bm.arange(real_data_o.shape[0] * steps) / steps, real_data_o, show=False, 
+                             xlabel='Time (s)', ylabel="Electrodes", title='Read-world Experiment')
+    plt.savefig(os.path.join(savepath, "real_spikes.png"), dpi = 300, pad_inches = 0.0, bbox_inches = 'tight')
+    # plt.savefig(os.path.join(savepath, "real_spikes.svg"), format='svg', dpi = 300, 
+    #             pad_inches = 0.0, bbox_inches = 'tight')
+    plt.clf()
     plt.close()
 
     # cumsum line
-    xtrick = np.arange(real_spikes.shape[1])
-    fig, ax = plt.subplots()
+    # xtrick = np.arange(real_spikes.shape[1])
+    # fig, ax = plt.subplots()
+    # real_data = np.mean(real_spikes, axis=0)
+    # # ax.grid(True, alpha=0.3)
+    # if np.ndim(spikes_trains) > 2:
+    #     spikes =  np.mean(np.mean(spikes_trains, axis=0), axis=0)
+    #     spikes = spikes / np.sum(spikes)
+    #     l, = ax.plot(xtrick, np.cumsum(spikes), label='Framework')
+    #     cum_real_temp = np.cumsum(np.sum(spikes_trains, axis = 1), axis=1)
+    #     cum_real = np.array([x/np.max(x) for x in cum_real_temp])
+    #     upbound = np.max(cum_real, axis=0)
+    #     lowbound = np.min(cum_real, axis=0)
+    #     print(upbound, lowbound)
+    #     ax.fill_between(xtrick,
+    #                 lowbound, upbound,
+    #                 color=l.get_color(), alpha=.3)
+    # else:
+    #     spikes = np.mean(spikes_trains, axis=0)
+    #     spikes = spikes / np.sum(spikes)
+    #     ax.plot(xtrick, np.cumsum(spikes), label='Framework')
+
+    # real_data = real_data / np.sum(real_data)
+    # ax.plot(xtrick, np.cumsum(real_data), label='Real-world')
+    # ax.set_xlabel("Index")
+    # ax.set_ylabel("Normalized fire rate")
+    # plt.legend()
+    # plt.savefig(os.path.join(savepath, "line.png"), dpi = 300, pad_inches = 0.0, bbox_inches = 'tight')
+    # plt.clf()
+    # plt.close()
+
+
     real_data = np.mean(real_spikes, axis=0)
-    # ax.grid(True, alpha=0.3)
+    real_data = real_data / np.sum(real_data)
     if np.ndim(spikes_trains) > 2:
         spikes =  np.mean(np.mean(spikes_trains, axis=0), axis=0)
         spikes = spikes / np.sum(spikes)
-        l, = ax.plot(xtrick, np.cumsum(spikes), label='Framework')
-        cum_real_temp = np.cumsum(np.sum(spikes_trains, axis = 1), axis=1)
-        cum_real = np.array([x/np.max(x) for x in cum_real_temp])
-        upbound = np.max(cum_real, axis=0)
-        lowbound = np.min(cum_real, axis=0)
-        print(upbound, lowbound)
-        ax.fill_between(xtrick,
-                    lowbound, upbound,
-                    color=l.get_color(), alpha=.3)
     else:
         spikes = np.mean(spikes_trains, axis=0)
         spikes = spikes / np.sum(spikes)
-        ax.plot(xtrick, np.cumsum(spikes), label='Framework')
-
-    real_data = real_data / np.sum(real_data)
-    ax.plot(xtrick, np.cumsum(real_data), label='Real-world')
-    ax.set_xlabel("Index")
-    ax.set_ylabel("Normalized fire rate")
-    plt.legend()
-    plt.savefig(os.path.join(savepath, "line.png"), dpi = 300)
-    plt.close()
 
    
 
     # =================================  heatmap ==============================
     maxx = max(np.max(real_data), np.max(spikes))
     # heatmap of real data
-    sns.heatmap(real_data.reshape((8,8)).T, square=True, annot=True, cmap='Blues', annot_kws={'size': 5}, 
-                vmin = 0, vmax=maxx, cbar_kws={'label': 'Normalized fire rate', "shrink": 0.8})
-    plt.title('The proportion of spikes with real-world')
+    plt.figure(figsize=(10,6))
+    sns.heatmap(real_data.reshape((8,8)).T, square=True, annot=True, cmap="Greens", annot_kws={'size': 7}, 
+                vmin = 0, vmax=maxx, cbar_kws={'label': 'Normalized firing rate', "shrink": 0.8})
+    plt.title('Read-world Experiment')
     plt.xticks(fontsize=12)
     plt.yticks(fontsize=12)
     plt.savefig(os.path.join(savepath, "real_heatmap.png"), dpi = 300)
+    # plt.savefig(os.path.join(savepath, "real_heatmap.svg"), format='svg', pad_inches = 0.0, bbox_inches = 'tight')
+    plt.clf()
     plt.close()
     # heatmap of framework
-    sns.heatmap(spikes.reshape((8,8)).T, square=True, annot=True, cmap='Blues', annot_kws={'size': 5},
-                vmin = 0, vmax=maxx, cbar_kws={'label': 'Normalized fire rate', "shrink": 0.8})
-    plt.title('The proportion of spikes with framework')
+    plt.figure(figsize=(10,6))
+    sns.heatmap(spikes.reshape((8,8)).T, square=True, annot=True, cmap="Blues", annot_kws={'size': 7},
+                vmin = 0, vmax=maxx, cbar_kws={'label': 'Normalized firing rate', "shrink": 0.8})
+    # plt.title('Digital Twin Model')
+    plt.title(name)
     plt.xticks(fontsize=12)
     plt.yticks(fontsize=12)
     plt.savefig(os.path.join(savepath, "frame_heatmap.png"), dpi = 300)
+    # plt.savefig(os.path.join(savepath, "frame_heatmap.svg"), format='svg', pad_inches = 0.0, bbox_inches = 'tight')
+    plt.clf()
     plt.close()
 
 
 
     
     # fire rate across MEA
-    plt.figure(figsize=(10, 4))
+    plt.figure(figsize=(10, 3))
     real_data = real_data.reshape(-1)
     spikes = spikes.reshape(-1)
     real_data = real_data / np.sum(real_data)
@@ -227,66 +253,68 @@ def sigle_save(real_data_o, spikes_o, savepath, vis_args):
     x_ticks = np.arange(0, spikes.shape[0])
     width = 0.4
 
-    plt.bar(x_ticks - width/2, spikes, width = width, label='Framework',  edgecolor='white', color = color_bar["simu_color"])
-    plt.bar(x_ticks + width/2, real_data, width = width, label='Real-world', edgecolor='white', color = color_bar["real_color"])
+    plt.bar(x_ticks + width/2, real_data, width = width, label='Read-world Experiment', edgecolor='white')
+    plt.bar(x_ticks - width/2, spikes, width = width, label=name,  edgecolor='white')
+    
     # for x, y in zip(x_ticks, real_data):
     #     plt.text(x + 0.4, y + 0.05, '%.2f' % y, ha='center', va='bottom')
-    plt.ylabel("Normalized fire rate")
+    plt.ylabel("Normalized firing rate")
     plt.xlabel("MEA index")
     plt.legend()
     # maxx = max(np.max(real_data), np.max(spikes)) / 4
     # idx = (np.arange(9) - 4) * maxx
     # ytext = ['%.2f' % x for x in np.abs(idx)]
     # plt.yticks(idx, ytext)
+    # plt.savefig(os.path.join(savepath, "hist_across_mea.svg"), format='svg', pad_inches = 0.0, bbox_inches = 'tight')
     plt.savefig(os.path.join(savepath, "hist_across_mea.png"), dpi = 300)
     plt.close()
 
 
-    # fire rate across time
-    real_mea = np.sum(real_spikes, axis=1)
-    spikes_mea = np.mean(np.sum(spikes_trains, axis=2), axis=0)
-    interval_sim = int(0.2 / bm.get_dt())
-    num = int(spikes_mea.shape[0] / interval_sim)
-    interval_real = int(real_mea.shape[0] / num)
+    # # fire rate across time
+    # real_mea = np.sum(real_spikes, axis=1)
+    # spikes_mea = np.mean(np.sum(spikes_trains, axis=2), axis=0)
+    # interval_sim = int(0.2 / bm.get_dt())
+    # num = int(spikes_mea.shape[0] / interval_sim)
+    # interval_real = int(real_mea.shape[0] / num)
 
-    real_mea_i = np.zeros(num)
-    spikes_mea_i = np.zeros(num)
+    # real_mea_i = np.zeros(num)
+    # spikes_mea_i = np.zeros(num)
 
-    for i in range(num):
-        real_mea_i[i] = np.sum(real_mea[i*interval_real:(i+1)*interval_real])
-        spikes_mea_i[i] = np.sum(spikes_mea[i*interval_sim:(i+1)*interval_sim])
+    # for i in range(num):
+    #     real_mea_i[i] = np.sum(real_mea[i*interval_real:(i+1)*interval_real])
+    #     spikes_mea_i[i] = np.sum(spikes_mea[i*interval_sim:(i+1)*interval_sim])
 
 
-    real_mea_i = real_mea_i / np.sum(real_mea_i)
-    spikes_mea_i = spikes_mea_i / np.sum(spikes_mea_i)
-    plt.figure(figsize=(10, 4))
-    x_ticks = np.arange(0, num) * 0.1
-    width = 0.04
-    
-    plt.bar(x_ticks + width/2, spikes_mea_i, width = width, label='Framework',  edgecolor='white', color = color_bar["simu_color"])
-    plt.bar(x_ticks - width/2, real_mea_i, width = width, label='Real-world', edgecolor='white', color = color_bar["real_color"])
+    # real_mea_i = real_mea_i / np.sum(real_mea_i)
+    # spikes_mea_i = spikes_mea_i / np.sum(spikes_mea_i)
     # plt.figure(figsize=(10, 4))
-    # real_mea_x, _ = np.where(real_spikes)
-    # spikes_mea_x, _ = np.where(spikes_trains)
-    # interval = int(0.1 / bm.get_dt())
-    # real_mea_x = np.round(real_mea_x / interval) * interval
-    # spikes_mea_x = np.round(spikes_mea_x / interval) * interval
+    # x_ticks = np.arange(0, num) * 0.1
+    # width = 0.04
+    
+    # plt.bar(x_ticks + width/2, spikes_mea_i, width = width, label='Framework',  edgecolor='white', color = color_bar["simu_color"])
+    # plt.bar(x_ticks - width/2, real_mea_i, width = width, label='Real-world', edgecolor='white', color = color_bar["real_color"])
+    # # plt.figure(figsize=(10, 4))
+    # # real_mea_x, _ = np.where(real_spikes)
+    # # spikes_mea_x, _ = np.where(spikes_trains)
+    # # interval = int(0.1 / bm.get_dt())
+    # # real_mea_x = np.round(real_mea_x / interval) * interval
+    # # spikes_mea_x = np.round(spikes_mea_x / interval) * interval
 
-    # real_mea = pd.DataFrame(real_mea_x.reshape(-1,1), columns=["Real-world"])
-    # spikes_mea = pd.DataFrame(spikes_mea_x.reshape(-1,1), columns=["Framework"])
+    # # real_mea = pd.DataFrame(real_mea_x.reshape(-1,1), columns=["Real-world"])
+    # # spikes_mea = pd.DataFrame(spikes_mea_x.reshape(-1,1), columns=["Framework"])
 
-    # fig,axes=plt.subplots() 
-    # sns.histplot(pd.DataFrame(real_mea), ax=axes, kde=True)
-    # sns.histplot(pd.DataFrame(spikes_mea), ax=axes, kde=True)
-    plt.ylabel("Normalized fire rate")
-    plt.xlabel("Time (s)")
-    plt.legend()
-    # maxx = max(np.max(real_mea_i), np.max(spikes_mea_i)) / 4
-    # idx = (np.arange(9) - 4) * maxx
-    # ytext = ['%.2f' % x for x in np.abs(idx)]
-    # plt.yticks(idx, ytext)
-    plt.savefig(os.path.join(savepath, "hist_across_time.png"), dpi = 300)
-    plt.close()
+    # # fig,axes=plt.subplots() 
+    # # sns.histplot(pd.DataFrame(real_mea), ax=axes, kde=True)
+    # # sns.histplot(pd.DataFrame(spikes_mea), ax=axes, kde=True)
+    # plt.ylabel("Normalized fire rate")
+    # plt.xlabel("Time (s)")
+    # plt.legend()
+    # # maxx = max(np.max(real_mea_i), np.max(spikes_mea_i)) / 4
+    # # idx = (np.arange(9) - 4) * maxx
+    # # ytext = ['%.2f' % x for x in np.abs(idx)]
+    # # plt.yticks(idx, ytext)
+    # plt.savefig(os.path.join(savepath, "hist_across_time.png"), dpi = 300)
+    # plt.close()
 
 
 def dyn_draw(i, spikes, time, index, x_ticks, prV, r, spikes_, width):
@@ -325,7 +353,8 @@ def save_data(savepath, real_data, spikes):
         save_path = os.path.join(savepath, "spikes/")
         if not os.path.exists(save_path):
             os.makedirs(save_path) 
-        np.save(os.path.join(save_path, "real_data.npy"), real_data)
+        if real_data is not None:
+            np.save(os.path.join(save_path, "real_data.npy"), real_data)
         np.save(os.path.join(save_path, "sim_data.npy"), spikes)
         print("Saved !")
     except:
@@ -341,120 +370,122 @@ def draw_res(spikes, savepath, real_data, interval, Vmat, vis_args):
     save_data(savepath, real_data, spikes)
 
     if real_data is None:
-        for i in range(0, spikes.shape[0], interval):
-            idex = np.sum(spikes[i:i+interval], axis=0) >= 0.5
-            if interval > 1:
-                spikes[i+1:i+interval] = 0
-            spikes[i] = idex
+        pass
+        # for i in range(0, spikes.shape[0], interval):
+        #     idex = np.sum(spikes[i:i+interval], axis=0) >= 0.5
+        #     if interval > 1:
+        #         spikes[i+1:i+interval] = 0
+        #     spikes[i] = idex
         
-        plt.figure(figsize=(10, 6))
-        plt.subplots_adjust(wspace =0.5, hspace = 0.3)
-        plt.ion() 
-        ts = np.arange(spikes.shape[0]) * bm.get_dt()
-        i = 0
-        # frames = []
-        while i < spikes.shape[0]:
-            plt.clf()
-            r = min(int(i + 1 / bm.get_dt() / 4), spikes.shape[0])
-            if np.sum(spikes[i:r])  < 15:
-                i = r
-            elements = np.where(spikes[:i+1] > 0.)
-            index = elements[1]
-            time = ts[elements[0]]
-            prV = Vmat[:i]
+        # plt.figure(figsize=(10, 6))
+        # plt.subplots_adjust(wspace =0.5, hspace = 0.3)
+        # plt.ion() 
+        # ts = np.arange(spikes.shape[0]) * bm.get_dt()
+        # i = 0
+        # # frames = []
+        # while i < spikes.shape[0]:
+        #     plt.clf()
+        #     r = min(int(i + 1 / bm.get_dt() / 4), spikes.shape[0])
+        #     if np.sum(spikes[i:r])  < 15:
+        #         i = r
+        #     elements = np.where(spikes[:i+1] > 0.)
+        #     index = elements[1]
+        #     time = ts[elements[0]]
+        #     prV = Vmat[:i]
 
-            x_ticks = np.arange(0, spikes.shape[1])
-            spikes_ = np.sum(spikes[:r], axis=0).reshape(-1)
-            width = 0.4
+        #     x_ticks = np.arange(0, spikes.shape[1])
+        #     spikes_ = np.sum(spikes[:r], axis=0).reshape(-1)
+        #     width = 0.4
 
-            # frames.append(dyn_draw_gif(i, spikes, time, index, x_ticks, prV, r, spikes_, width))
-            dyn_draw(i, spikes, time, index, x_ticks, prV, r, spikes_, width)
-            i = min(i + 10, spikes.shape[0])
+        #     # frames.append(dyn_draw_gif(i, spikes, time, index, x_ticks, prV, r, spikes_, width))
+        #     dyn_draw(i, spikes, time, index, x_ticks, prV, r, spikes_, width)
+        #     i = min(i + 10, spikes.shape[0])
 
-        plt.ioff()
-        plt.show()
-        plt.close()
+        # plt.ioff()
+        # plt.show()
+        # plt.close()
 
         # gif.save(frames, os.path.join(savepath, "res.gif"), duration=1000)
         # plt.savefig(os.path.join(savepath, "outcomes_sim.png"), dpi = 300)
     
     else:
+        pass
         
         # draw V
-        V = Vmat
-        fig, ax = plt.subplots()
-        colp = ax.pcolormesh(V, )#cmap = "RdBu_r")
-        plt.colorbar(colp)
-        ax.set_title("Membrane potential")
-        ax.set_xlabel("Neuron index")
-        ax.set_ylabel("Time (s)")
-        ylabels = ax.get_yticks().tolist()
-        ylabels = (np.array(ylabels) * bm.get_dt()).tolist()
-        ax.set_yticklabels(ylabels)
-        plt.savefig(os.path.join(savepath, "V.png"), dpi = 300)
-        plt.close()
+        # V = Vmat
+        # fig, ax = plt.subplots()
+        # colp = ax.pcolormesh(V, )#cmap = "RdBu_r")
+        # plt.colorbar(colp)
+        # ax.set_title("Membrane potential")
+        # ax.set_xlabel("Neuron index")
+        # ax.set_ylabel("Time (s)")
+        # ylabels = ax.get_yticks().tolist()
+        # ylabels = (np.array(ylabels) * bm.get_dt()).tolist()
+        # ax.set_yticklabels(ylabels)
+        # plt.savefig(os.path.join(savepath, "V.png"), dpi = 300)
+        # plt.close()
 
 
-        # draw heatmap
-        real_data = np.sum(real_data, axis=0) / np.sum(real_data)
-        spikes = np.sum(spikes, axis=0) / np.sum(spikes)
-        maxx = max(np.max(real_data), np.max(spikes))
-        plt.figure(figsize=(10, 6))
-        plt.subplots_adjust(wspace=0.5, hspace=0.3)
-        plt.subplot(2,3,1)
-        sns.heatmap(real_data.reshape((8,8)), cmap="Blues", vmin = 0, vmax = maxx,
-                    cbar_kws={'label': 'Normalized fire rate', "shrink": 0.8})
-        plt.title("Real-world")
-        plt.xlabel("Electrodes Col")
-        plt.ylabel("Electrodes Row")
-        plt.xticks([])
-        plt.yticks([])
-        plt.subplot(2,3,2)
-        sns.heatmap(spikes.reshape((8,8)), cmap="Blues", vmin = 0, vmax = maxx,
-                    cbar_kws={'label': 'Normalized fire rate', "shrink": 0.8})
-        plt.title("Framework")
-        plt.xlabel("Electrodes Col")
-        plt.ylabel("Electrodes Row")
-        plt.xticks([])
-        plt.yticks([])
+        # # draw heatmap
+        # real_data = np.sum(real_data, axis=0) / np.sum(real_data)
+        # spikes = np.sum(spikes, axis=0) / np.sum(spikes)
+        # maxx = max(np.max(real_data), np.max(spikes))
+        # plt.figure(figsize=(10, 6))
+        # plt.subplots_adjust(wspace=0.5, hspace=0.3)
+        # plt.subplot(2,3,1)
+        # sns.heatmap(real_data.reshape((8,8)), cmap="Blues", vmin = 0, vmax = maxx,
+        #             cbar_kws={'label': 'Normalized fire rate', "shrink": 0.8})
+        # plt.title("Real-world")
+        # plt.xlabel("Electrodes Col")
+        # plt.ylabel("Electrodes Row")
+        # plt.xticks([])
+        # plt.yticks([])
+        # plt.subplot(2,3,2)
+        # sns.heatmap(spikes.reshape((8,8)), cmap="Blues", vmin = 0, vmax = maxx,
+        #             cbar_kws={'label': 'Normalized fire rate', "shrink": 0.8})
+        # plt.title("Framework")
+        # plt.xlabel("Electrodes Col")
+        # plt.ylabel("Electrodes Row")
+        # plt.xticks([])
+        # plt.yticks([])
 
 
-        plt.subplot(2,3,3)
-        real_data = real_data / np.sum(real_data)
-        spikes = spikes / np.sum(spikes)
-        cum_real_data = np.cumsum(real_data)
-        cum_spikes = np.cumsum(spikes)
+        # plt.subplot(2,3,3)
+        # real_data = real_data / np.sum(real_data)
+        # spikes = spikes / np.sum(spikes)
+        # cum_real_data = np.cumsum(real_data)
+        # cum_spikes = np.cumsum(spikes)
 
-        l = np.arange(cum_real_data.shape[0])
-        plt.plot(l, cum_real_data, label='Real-world')
-        plt.plot(l, cum_spikes, label='Framework')
-        plt.legend()
+        # l = np.arange(cum_real_data.shape[0])
+        # plt.plot(l, cum_real_data, label='Real-world')
+        # plt.plot(l, cum_spikes, label='Framework')
+        # plt.legend()
 
 
-        plt.subplot(2,1,2)
-        real_data = real_data.reshape(-1)
-        spikes = spikes.reshape(-1)
-        x_ticks = np.arange(0, spikes.shape[0])
-        width = 0.4
-        plt.bar(x_ticks - width / 2 , real_data, width = width, label='Real-world', edgecolor='white', color = color_bar["real_color"])
-        plt.bar(x_ticks + width / 2, spikes, width = width, label='Framework',  edgecolor='white', color = color_bar["simu_color"])
+        # plt.subplot(2,1,2)
+        # real_data = real_data.reshape(-1)
+        # spikes = spikes.reshape(-1)
+        # x_ticks = np.arange(0, spikes.shape[0])
+        # width = 0.4
+        # plt.bar(x_ticks - width / 2 , real_data, width = width, label='Real-world', edgecolor='white', color = color_bar["real_color"])
+        # plt.bar(x_ticks + width / 2, spikes, width = width, label='Framework',  edgecolor='white', color = color_bar["simu_color"])
         
-        # for x, y in zip(x_ticks, real_data):
-        #     plt.text(x + 0.4, y + 0.05, '%.2f' % y, ha='center', va='bottom')
-        plt.ylabel("Normalized fire rate")
-        plt.xlabel("MEA index")
-        plt.legend()
-        # maxx = max(np.max(real_data), np.max(spikes)) / 4
-        # idx = (np.arange(9) - 4) * maxx
-        # ytext = ['%.2f' % x for x in np.abs(idx)]
-        # plt.yticks(idx, ytext)
-        # plt.subplot(1,4,4)
-        # plt.plot(np.arange(64), real_data.reshape(-1), label = "Real-world")
-        # plt.plot(np.arange(64), spikes.reshape(-1), label = "Framework")
+        # # for x, y in zip(x_ticks, real_data):
+        # #     plt.text(x + 0.4, y + 0.05, '%.2f' % y, ha='center', va='bottom')
+        # plt.ylabel("Normalized fire rate")
+        # plt.xlabel("MEA index")
+        # plt.legend()
+        # # maxx = max(np.max(real_data), np.max(spikes)) / 4
+        # # idx = (np.arange(9) - 4) * maxx
+        # # ytext = ['%.2f' % x for x in np.abs(idx)]
+        # # plt.yticks(idx, ytext)
+        # # plt.subplot(1,4,4)
+        # # plt.plot(np.arange(64), real_data.reshape(-1), label = "Real-world")
+        # # plt.plot(np.arange(64), spikes.reshape(-1), label = "Framework")
         
-        plt.savefig(os.path.join(savepath, "outcomes.png"), dpi = 300)
-        plt.show()
-        plt.close()
+        # plt.savefig(os.path.join(savepath, "outcomes.png"), dpi = 300)
+        # plt.show()
+        # plt.close()
 
 
 

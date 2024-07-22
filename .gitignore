@@ -9,3 +9,4 @@ build
 *.exe
 releases
 dist
+script/img

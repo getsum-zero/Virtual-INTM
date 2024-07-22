@@ -1,6 +1,5 @@
 import jax.numpy as jnp
 import os
-import matplotlib.pyplot as plt
 import numpy as np
 
 import ttkbootstrap as ttk
@@ -131,14 +130,41 @@ def getModel(args):
         with open(os.path.join(loadpath, "topology.pkl"), 'rb') as file:
             topology = pickle.load(file)
         print("Loading topology from " + os.path.join(loadpath, "topology.pkl"))
+        real_data = None
+        if real_data_args["backward"] is not None:
+            real_data = fromRealdata(real_data_args["backward"], 
+                                shape = (args["shape"]["row"],args["shape"]["col"]), 
+                                draw_ori = real_data_args["draw_ori"], 
+                                draw_p = real_data_args["draw_p"],
+                                stTime = real_data_args["stTime"],
+                                cutTime = real_data_args["cutTime"],
+                                pseudo_trace = real_data_args["pseudo_trace"],
+                                save_path = real_data_args["savepath"]
+                            )
         
-        net = SNN(N = topology_args["N"], topology = topology, args = synapses_args)
+        net = SNN(N = topology_args["N"], topology = topology, args = synapses_args, neuron_args = neuron_args)
         # states = bp.checkpoints.load_pytree(os.path.join(loadpath, "model.bp"))
         # net.load_state_dict(states["net"])
-        return None, topology, net
+        return real_data, topology, net
     else:
         raise("Mode error!")
 
+
+def balance_fire_rate(spikes, real_data, timescale = 1.0):
+    tot_fire = np.sum(real_data)
+    res = np.zeros_like(spikes)
+    for i in range(spikes.shape[0]):
+        if np.sum(spikes[:i+1]) >= tot_fire * timescale:
+            tot_l = int(np.floor(res.shape[0] / (i+1)))
+            more = spikes.shape[0] - tot_l * (i+1)
+            xtrick = np.ones(i+1) * tot_l
+            xtrick[:more] = xtrick[:more] + 1
+            np.random.shuffle(xtrick)
+            xtrick = np.cumsum(xtrick) - 1
+
+            res[xtrick.astype(np.int32)] = spikes[:i+1]
+            return False, res
+    return True, None
 
 
 def running(args):
@@ -184,12 +210,18 @@ def running(args):
             spikes[:,x] += trainer.mon["n.spike"][:,0,y]
         
         spikes = spikes[warmup * steps:,:]
-        
         for i in range(0, spikes.shape[0], interval):
             idex = np.sum(spikes[i:i+interval], axis=0) > 0
             if interval > 1:
                 spikes[i+1:i+interval] = 0
             spikes[i] = idex
+        
+        if real_data is not None:
+            flag, spikes = balance_fire_rate(spikes, real_data, args["Setting"]["timescale"])
+            if flag:
+                args["Running"]["during"] = args["Running"]["during"] + 10
+                return running(args)
+        
         # spikes = np.sum(spikes, axis=0)
         # spikes = spikes / (np.sum(spikes) + 1e-8)
         epoch_spike.append(spikes)
@@ -199,9 +231,14 @@ def running(args):
 
     with open(os.path.join(savepath, 'topology.pkl'), 'wb') as file:
         pickle.dump(topology, file)
-    print("Saving Topology into!" + os.path.join(savepath, "topology.yaml"))  
+    print("Saving Topology into!" + os.path.join(savepath, "topology.yaml")) 
 
-    sigle_save(real_data, np.array(epoch_spike), savepath=savepath, vis_args=args["Visual"])
+    if args["real_world_data"]["mode"] == "fitting":
+        name = "Digital Twin Model"
+    else:
+        name = "Virtual Experiment"
+
+    sigle_save(real_data, np.array(epoch_spike), savepath=savepath, vis_args=args["Visual"], name = name)
     epoch_spike = np.array(epoch_spike)
     epoch_spike = np.sum(epoch_spike, axis=0) / epoch
     
@@ -265,20 +302,20 @@ class TaskWithProgressBar:
             self.root.after(100, self.update_time_label)
     
     def run_simu(self, args):
-        # try:
-        defult_setting(args["Setting"])
-        sim, real, v = running(args)
-        self.display = 0
-        self.progressbar.stop()
-        self.root.destroy()
-        draw_res(sim, args["Running"]["savepath"], real, args["Running"]["interval"], v, args["Visual"])
-        
-        # self.time_label.config(text="Simulation Completed in %.2fs" % self.elapsed_time)
-        tk.messagebox.showinfo("Message", "Simulation Done!")
-        # except Exception as e:
-        #     self.progressbar.stop()
-        #     self.root.destroy()
-        #     tk.messagebox.showerror("Error", "Runtime error, please select correct parameters or check the running environment")
+        try:
+            defult_setting(args["Setting"])
+            sim, real, v = running(args)
+            self.display = 0
+            self.progressbar.stop()
+            self.root.destroy()
+            draw_res(sim, args["Running"]["savepath"], real, args["Running"]["interval"], v, args["Visual"])
+            
+            # self.time_label.config(text="Simulation Completed in %.2fs" % self.elapsed_time)
+            tk.messagebox.showinfo("Message", "Simulation Done!")
+        except Exception as e:
+            self.progressbar.stop()
+            self.root.destroy()
+            tk.messagebox.showerror("Error", str(e))
         
 
  

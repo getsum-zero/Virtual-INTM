@@ -1,8 +1,6 @@
-## Pysim
-
-本项目UI设计基于Tkinter/  [ttkbootstrap][1]
-
-本项目核心模块基于 [brainpy][2] ,更多信息详见原仓库
+## Virtual-INTM
+* The UI design of this project is based on Tkinter / [ttkbootstrap][1]
+* The core module of this project is based on [brainpy][2]
 
 ### 打包
 

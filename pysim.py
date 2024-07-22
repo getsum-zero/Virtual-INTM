@@ -23,6 +23,7 @@ args = {
         "mode": None,
         "stimulus" : None, 
         "response" : None, 
+        "backward": None,
         "draw_ori": False,              
         "draw_p": False, 
         "stTime": 70,
@@ -80,7 +81,8 @@ args = {
     "Setting":{
         "platform": "cpu",
         "cuda_devices": "0",
-        "dt": "0.01"
+        "dt": "0.01",
+        "timescale": "1.0"
     },
     "Running":{
         "savepath": "./logs/outputs/",
@@ -88,7 +90,7 @@ args = {
         "warmup": "15",
         "during": "10",
         "epoch": "1",
-        "interval": "2", 
+        "interval": "1", 
         "seed": "1234",
     },
     "Neuron":{  
@@ -186,7 +188,7 @@ class MEAinput():
         
         try:
             self.master.withdraw()
-            simroot = ttk.Toplevel(title="Simulator", resizable=(False, False))
+            simroot = ttk.Toplevel(title="Simulator", resizable=(False, False),)
 
             simwindow = SimUI(simroot, args)
             simwindow.run()

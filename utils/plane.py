@@ -28,8 +28,8 @@ find method:
 '''
 
 ele_color = "#D8D8D8"
-neur_trans_color = "#608BDF"
-neur_color = "#F7E1ED"
+neur_trans_color = "#C82423"
+neur_color = "#14517C"
 
 def dele_pseudo_trace(spikes, pseudo_trace = 0.2):
     steps = int(1 / bm.get_dt())
@@ -88,7 +88,7 @@ def fromRealdata(path, shape,
     spikes = spikes[stTime:cutTime+stTime]
     print(np.sum(spikes, axis=0))
     spikes = dele_pseudo_trace(spikes, pseudo_trace)
-    bp.visualize.raster_plot(bm.arange(cutTime), spikes, show=True)
+    # bp.visualize.raster_plot(bm.arange(cutTime), spikes, show=True)
 
     p = np.sum(spikes, axis=0)
     p = p / np.sum(p)
@@ -138,6 +138,7 @@ class plane():
                  cell_unit: float = 0.005,
                  cell_scale: list = [1],
                  cell_prob: list = [1],
+                 cell_size: list = None,
 
                  # connect
                  lateral_inh: bool = False,
@@ -166,6 +167,7 @@ class plane():
         self.ele_scale = ele_scale 
         self.cell_unit = cell_unit
         self.cluster_size = cell_scale
+        self.cluster_scale = cell_size
         self.cluster_prob = np.cumsum(cell_prob)
 
         self.lateral_inh = lateral_inh
@@ -228,7 +230,10 @@ class plane():
             for i in range(p):
                 f = self.num - num
                 cluster.append(f)
-                loc[f,2] = self.cluster_size[id_siz] * self.cell_unit
+                if self.cluster_scale is None:
+                    loc[f,2] = self.cluster_size[id_siz] * self.cell_unit
+                else:
+                    loc[f,2] = self.cluster_scale[id_siz] * self.cell_unit
                 loc[f,:2] = loc_now
                 num = num - 1
                 res[id].append(f)
@@ -243,6 +248,7 @@ class plane():
 
 
         if draw_point:
+            plt.figure(figsize=(4,2))
             figure, axes = plt.subplots()
             axes.set_aspect(1)
             axes.set_xlim(0, self.Nshape[0] * self.unit)
@@ -260,10 +266,14 @@ class plane():
                 draw_circle = plt.Circle((input[i,0], input[i,1]), input[i,2], color = neur_trans_color)
                 axes.add_artist(draw_circle)
             plt.grid(True)
+            plt.xlim(0,4)
+            plt.ylim(0,2)
             plt.xticks([])
             plt.yticks([])
-            #plt.axis("equal")
-            plt.savefig(os.path.join(self.savepath, "sim_points.png"), dpi = 300)
+
+            # plt.axis("equal")
+            plt.savefig(os.path.join(self.savepath, "sim_points.png"), dpi = 300, pad_inches = 0.0, bbox_inches='tight')
+            # plt.savefig(os.path.join(self.savepath, "sim_points.svg"), dpi = 300, format="svg", pad_inches = 0.0, bbox_inches='tight')
             plt.cla()
             plt.close()
 
